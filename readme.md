@@ -1,5 +1,6 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/leg100/signer)](https://goreportcard.com/report/github.com/leg100/signer)
 [![Version](https://img.shields.io/badge/goversion-1.18.x-blue.svg)](https://golang.org)
+[![Go Reference](https://pkg.go.dev/badge/github.com/leg100/signer.svg)](https://pkg.go.dev/github.com/leg100/signer)
 [![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/leg100/goblender/master/LICENSE)
 ![Tests](https://github.com/leg100/signer/actions/workflows/tests.yml/badge.svg)
 # Signer
