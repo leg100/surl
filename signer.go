@@ -11,20 +11,19 @@ import (
 	"golang.org/x/crypto/blake2b"
 )
 
-// ErrInvalidSignature is returned when the provided token's
-// signatuire is not valid.
-var ErrInvalidSignature = errors.New("invalid signature")
+var (
+	// ErrInvalidSignature is returned when the provided token's
+	// signatuire is not valid.
+	ErrInvalidSignature = errors.New("invalid signature")
+	// ErrInvalidMessageFormat is returned when the message's format is
+	// invalid.
+	ErrInvalidMessageFormat = errors.New("invalid message format")
+	// ErrExpired is returned by when the signed URL's expiry has been
+	// exceeded.
+	ErrExpired = errors.New("URL has expired")
+)
 
-// ErrInvalidMessageFormat is returned when the message's format is
-// invalid.
-var ErrInvalidMessageFormat = errors.New("invalid message format")
-
-// ErrExpired is returned by when the signed URL's expiry has been
-// exceeded.
-var ErrExpired = errors.New("URL has expired")
-
-// Signer is the type for the package. Secret is the signer secret, a lengthy
-// and hard to guess string we use to sign things. The secret must not exceed 64 characters.
+// Signer is capable of signing and verifying signed URLs with an expiry.
 type Signer struct {
 	mu    sync.Mutex
 	hash  hash.Hash
