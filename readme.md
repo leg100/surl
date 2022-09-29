@@ -4,7 +4,7 @@
 ![Tests](https://github.com/leg100/signer/actions/workflows/tests.yml/badge.svg)
 # Signer
 
-Signer creates signed URLs that expire after a given time.
+Create signed URLs valid for a limited lifespan
 
 ## Installation
 
