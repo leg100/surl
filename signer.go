@@ -55,13 +55,16 @@ func New(key []byte) *Signer {
 
 // Sign generates a signed URL with the given lifespan.
 func (s *Signer) Sign(u string, lifespan time.Duration) (string, error) {
-	// verify this is a valid url
 	parsed, err := url.ParseRequestURI(u)
 	if err != nil {
 		return "", err
 	}
-	// only the URL path is signed; the remainder of the URL is ignored
-	data := parsed.Path
+	// retrieve signable part of URL
+	data, err := parseURL(parsed)
+	if err != nil {
+		return "", err
+	}
+
 	// calculate expiry
 	exp := time.Now().Add(lifespan)
 	// add expiry to data to create the payload
@@ -71,8 +74,23 @@ func (s *Signer) Sign(u string, lifespan time.Duration) (string, error) {
 	// add signature to payload to create the new path
 	path := s.AddSignature(signature, payload)
 
-	// return URL updated with signed path
-	parsed.Path = string(path)
+	// return updated URL
+	questionMark := 0
+	for i, b := range path {
+		if b == '?' {
+			questionMark = i
+			break
+		}
+	}
+	if questionMark != 0 {
+		parsed.Path = string(path[:questionMark])
+		// check whether there is anything after '?'
+		if len(path) > questionMark {
+			parsed.RawQuery = string(path[questionMark+1:])
+		}
+	} else {
+		parsed.Path = string(path)
+	}
 	return parsed.String(), nil
 }
 
@@ -82,11 +100,14 @@ func (s *Signer) Verify(u string) error {
 	if err != nil {
 		return err
 	}
-	// only the path is signed
-	path := parsed.Path
+	// retrieve signable part of URL
+	data, err := parseURL(parsed)
+	if err != nil {
+		return err
+	}
 
-	// get signature and payload from path
-	signature, payload, err := s.ExtractSignature([]byte(path))
+	// get signature and payload from data
+	signature, payload, err := s.ExtractSignature([]byte(data))
 	if err != nil {
 		return err
 	}
@@ -119,4 +140,14 @@ func (s *Signer) sign(data []byte) []byte {
 	s.dirty = true
 	s.hash.Write(data)
 	return s.hash.Sum(nil)
+}
+
+// parseURL parses the signable part of the URL, which is the path and the query
+// if it has one.
+func parseURL(u *url.URL) ([]byte, error) {
+	signable := u.Path
+	if u.RawQuery != "" {
+		signable = signable + "?" + u.RawQuery
+	}
+	return []byte(signable), nil
 }

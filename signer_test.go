@@ -29,8 +29,8 @@ func TestSignature_SignURL(t *testing.T) {
 	t.Run("verifiable", func(t *testing.T) {
 		// this URL was created with a maximum lifespan:
 		// u := "https://example.com/a/b/c?baz=cow&foo=bar"
-		// signed, err := sign.SignURL(u, time.Duration(math.MaxInt64))
-		u := "https://example.com/signed/5387hhk1Dl-SCQ-BNucYgptZsJhZO4Tn-FpvHtO3j-Q.10887773970/a/b/c?baz=cow&foo=bar"
+		// signed, err := sign.Sign(u, time.Duration(math.MaxInt64))
+		u := "https://example.com/signed/_BGBJ-6OcP6GnoQz071_rU_VfMWRbi0MGLLQhfxesRg.10887835696/a/b/c?baz=cow&foo=bar"
 		err := sign.Verify(u)
 		require.NoError(t, err)
 	})
