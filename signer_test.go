@@ -9,22 +9,40 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSignature_SignURL(t *testing.T) {
+func TestSigner(t *testing.T) {
 	sign := New([]byte("abc123"))
 
-	t.Run("signable", func(t *testing.T) {
-		u := "https://example.com/a/b/c?baz=cow&foo=bar"
-		signed, err := sign.Sign(u, time.Second*10)
-		require.NoError(t, err)
+	tests := []struct {
+		name string
+		url  string
+	}{
+		{
+			name: "with query",
+			url:  "https://example.com/a/b/c?baz=cow&foo=bar",
+		},
+		{
+			name: "without query",
+			url:  "https://example.com/a/b/c",
+		},
+		{
+			name: "with only question mark",
+			url:  "https://example.com/a/b/c?",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			signed, err := sign.Sign(tt.url, time.Second*10)
+			require.NoError(t, err)
 
-		// check valid URL
-		_, err = url.Parse(signed)
-		require.NoError(t, err)
+			// check valid URL
+			_, err = url.Parse(signed)
+			require.NoError(t, err)
 
-		// check valid signature
-		err = sign.Verify(signed)
-		require.NoError(t, err)
-	})
+			// check valid signature
+			err = sign.Verify(signed)
+			require.NoError(t, err)
+		})
+	}
 
 	t.Run("verifiable", func(t *testing.T) {
 		// this URL was created with a maximum lifespan:
