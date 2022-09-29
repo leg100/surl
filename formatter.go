@@ -27,12 +27,10 @@ type Formatter interface {
 // URL paths as an alternative to using query parameters.
 type URLPathFormatter struct {
 	// Prefix message with a string
-	//
-	// TODO: default to '/'?
 	Prefix string
 }
 
-// AddExpiry adds expiry as a base64 encoded component e.g. /foo/bar ->
+// AddExpiry adds expiry as a path component e.g. /foo/bar ->
 // 390830893/foo/bar
 func (u *URLPathFormatter) AddExpiry(exp time.Time, data []byte) []byte {
 	// convert expiry to bytes
