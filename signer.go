@@ -53,8 +53,8 @@ func New(key []byte) *Signer {
 	}
 }
 
-// SignURL generates a signed URL with the given lifespan.
-func (s *Signer) SignURL(u string, lifespan time.Duration) (string, error) {
+// Sign generates a signed URL with the given lifespan.
+func (s *Signer) Sign(u string, lifespan time.Duration) (string, error) {
 	// verify this is a valid url
 	parsed, err := url.ParseRequestURI(u)
 	if err != nil {
@@ -76,8 +76,8 @@ func (s *Signer) SignURL(u string, lifespan time.Duration) (string, error) {
 	return parsed.String(), nil
 }
 
-// VerifyURL verifies a signed URL
-func (s *Signer) VerifyURL(u string) error {
+// Verify verifies a signed URL
+func (s *Signer) Verify(u string) error {
 	parsed, err := url.ParseRequestURI(u)
 	if err != nil {
 		return err
