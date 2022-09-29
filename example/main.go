@@ -10,6 +10,7 @@ import (
 func main() {
 	sign := signer.New([]byte("secret_sesame"))
 
+	// Create a signed URL that expires in one hour.
 	signed, _ := sign.Sign("https://example.com/a/b/c?foo=bar", time.Hour)
 
 	fmt.Println("signed url:", signed)
