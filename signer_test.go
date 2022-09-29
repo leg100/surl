@@ -28,6 +28,10 @@ func TestSigner(t *testing.T) {
 			name: "with only question mark",
 			url:  "https://example.com/a/b/c?",
 		},
+		{
+			name: "only absolute path",
+			url:  "/a/b/c",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -60,6 +64,11 @@ func TestSigner(t *testing.T) {
 
 		err = sign.Verify(signed)
 		assert.Equal(t, ErrExpired, err)
+	})
+
+	t.Run("relative path", func(t *testing.T) {
+		_, err := sign.Sign("foo/bar", time.Minute)
+		assert.Error(t, err)
 	})
 
 	t.Run("invalid prefix", func(t *testing.T) {
