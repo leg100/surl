@@ -25,9 +25,10 @@ var (
 
 // Signer is capable of signing and verifying signed URLs with an expiry.
 type Signer struct {
-	mu    sync.Mutex
-	hash  hash.Hash
-	dirty bool
+	mu        sync.Mutex
+	hash      hash.Hash
+	dirty     bool
+	skipQuery bool
 
 	Formatter
 }
@@ -35,7 +36,7 @@ type Signer struct {
 // New constructs a new signer, performing the one-off task of generating a
 // secure hash from the key. The key must be between 0 and 64 bytes long;
 // anything longer is stripped off.
-func New(key []byte) *Signer {
+func New(key []byte, opts ...Option) *Signer {
 	hash, err := blake2b.New256(key)
 	if err != nil {
 		// The only possible error that can be returned here is if the key
@@ -46,9 +47,25 @@ func New(key []byte) *Signer {
 		// to return an error.
 		hash, _ = blake2b.New256(key[0:64])
 	}
-	return &Signer{
+	s := &Signer{
 		hash:      hash,
 		Formatter: &URLPathFormatter{Prefix: "/signed/"},
+	}
+	for _, o := range opts {
+		o(s)
+	}
+	return s
+}
+
+// Option permits customising the construction of a Signer
+type Option func(*Signer)
+
+// SkipQuery instructs Signer to skip the query string when calculating the
+// signature. This is useful, say, if you have pagination query parameters but
+// you want to use the same signed URL regardless of their value.
+func SkipQuery() Option {
+	return func(s *Signer) {
+		s.skipQuery = true
 	}
 }
 
@@ -59,7 +76,7 @@ func (s *Signer) Sign(u string, lifespan time.Duration) (string, error) {
 		return "", err
 	}
 	// retrieve signable part of URL
-	data, err := parseURL(parsed)
+	data, err := s.parseURL(parsed)
 	if err != nil {
 		return "", err
 	}
@@ -70,27 +87,11 @@ func (s *Signer) Sign(u string, lifespan time.Duration) (string, error) {
 	payload := s.AddExpiry(exp, []byte(data))
 	// sign payload creating a signature
 	signature := s.sign(payload)
-	// add signature to payload to create the new path
-	path := s.AddSignature(signature, payload)
+	// add signature to payload to create the signed data
+	data = s.AddSignature(signature, payload)
 
 	// return updated URL
-	questionMark := 0
-	for i, b := range path {
-		if b == '?' {
-			questionMark = i
-			break
-		}
-	}
-	if questionMark != 0 {
-		parsed.Path = string(path[:questionMark])
-		// check whether there is anything after '?'
-		if len(path) > questionMark {
-			parsed.RawQuery = string(path[questionMark+1:])
-		}
-	} else {
-		parsed.Path = string(path)
-	}
-	return parsed.String(), nil
+	return s.updateURL(parsed, data), nil
 }
 
 // Verify verifies a signed URL
@@ -100,7 +101,7 @@ func (s *Signer) Verify(u string) error {
 		return err
 	}
 	// retrieve signable part of URL
-	data, err := parseURL(parsed)
+	data, err := s.parseURL(parsed)
 	if err != nil {
 		return err
 	}
@@ -141,12 +142,40 @@ func (s *Signer) sign(data []byte) []byte {
 	return s.hash.Sum(nil)
 }
 
-// parseURL parses the signable part of the URL, which is the path and the query
-// if it has one.
-func parseURL(u *url.URL) ([]byte, error) {
+// updateURL updates the unsigned url with the signable part.
+func (s *Signer) updateURL(u *url.URL, msg []byte) string {
+	if s.skipQuery {
+		u.Path = string(msg)
+		return u.String()
+	}
+
+	questionMark := 0
+	for i, b := range msg {
+		if b == '?' {
+			questionMark = i
+			break
+		}
+	}
+	if questionMark != 0 {
+		u.Path = string(msg[:questionMark])
+		// check whether there is anything after '?'
+		if len(msg) > questionMark {
+			u.RawQuery = string(msg[questionMark+1:])
+		}
+	} else {
+		u.Path = string(msg)
+	}
+	return u.String()
+}
+
+// parseURL parses the signable part of an unsigned URL, which is the path and
+// optionally the query as well.
+func (s *Signer) parseURL(u *url.URL) ([]byte, error) {
 	signable := u.Path
-	if u.RawQuery != "" {
-		signable = signable + "?" + u.RawQuery
+	if !s.skipQuery {
+		if u.RawQuery != "" {
+			signable = signable + "?" + u.RawQuery
+		}
 	}
 	return []byte(signable), nil
 }

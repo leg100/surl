@@ -57,6 +57,39 @@ func TestSigner(t *testing.T) {
 		require.NoError(t, err)
 	})
 
+	// Demonstrate how changing the query string invalidates the signed URL
+	t.Run("do not skip query", func(t *testing.T) {
+		u := "https://example.com/a/b/c?foo=bar"
+		signed, err := sign.Sign(u, time.Minute)
+		require.NoError(t, err)
+
+		parsed, err := url.Parse(signed)
+		require.NoError(t, err)
+		parsed.RawQuery = "page_num=3&page_size=20"
+		signed = parsed.String()
+
+		err = sign.Verify(signed)
+		assert.Equal(t, ErrInvalidSignature, err)
+	})
+
+	// Demonstrate the SkipQuery option by changing the
+	// query string on the signed URL and showing it still verifies.
+	t.Run("skip query", func(t *testing.T) {
+		sign := New([]byte("abc123"), SkipQuery())
+
+		u := "https://example.com/a/b/c?foo=bar"
+		signed, err := sign.Sign(u, time.Minute)
+		require.NoError(t, err)
+
+		parsed, err := url.Parse(signed)
+		require.NoError(t, err)
+		parsed.RawQuery = "page_num=3&page_size=20"
+		signed = parsed.String()
+
+		err = sign.Verify(signed)
+		require.NoError(t, err)
+	})
+
 	t.Run("expired", func(t *testing.T) {
 		u := "https://example.com/a/b/c?baz=cow&foo=bar"
 		signed, err := sign.Sign(u, time.Duration(0))
