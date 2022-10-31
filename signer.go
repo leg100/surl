@@ -41,7 +41,7 @@ func New(key []byte, opts ...Option) *Signer {
 	if err != nil {
 		// The only possible error that can be returned here is if the key
 		// is larger than 64 bytes - which the blake2b hash will not accept.
-		// This is a case that is so easily avoidable when using this pacakge
+		// This is a case that is so easily avoidable when using this package
 		// and since chaining is convenient for this package.  We're going
 		// to do the below to handle this possible case so we don't have
 		// to return an error.
