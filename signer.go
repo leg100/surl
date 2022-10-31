@@ -1,4 +1,4 @@
-package signer
+package surl
 
 import (
 	"crypto/subtle"

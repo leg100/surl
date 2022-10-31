@@ -1,4 +1,4 @@
-module github.com/leg100/signer
+module github.com/leg100/surl
 
 go 1.18
 

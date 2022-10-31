@@ -1,4 +1,4 @@
-package signer
+package surl
 
 import (
 	"net/url"

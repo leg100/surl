@@ -18,4 +18,4 @@ help: Makefile
 ## update-pkg-cache: forces update on go.pkg.dev
 update-pkg-cache:
 	GOPROXY=https://proxy.golang.org GO111MODULE=on \
-	go get github.com/leg100/signer@${VERSION}
+	go get github.com/leg100/surl@${VERSION}
