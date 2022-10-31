@@ -5,7 +5,7 @@
 ![Tests](https://github.com/leg100/signer/actions/workflows/tests.yml/badge.svg)
 # surl
 
-Create signed URLs that expire
+Create signed URLs using go.
 
 ## Installation
 
