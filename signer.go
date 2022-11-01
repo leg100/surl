@@ -5,6 +5,8 @@ import (
 	"errors"
 	"hash"
 	"net/url"
+	"path"
+	"strings"
 	"sync"
 	"time"
 
@@ -13,14 +15,16 @@ import (
 
 var (
 	// ErrInvalidSignature is returned when the provided token's
-	// signatuire is not valid.
+	// signature is not valid.
 	ErrInvalidSignature = errors.New("invalid signature")
-	// ErrInvalidMessageFormat is returned when the message's format is
+	// ErrInvalidSignedURL is returned when the signed URL's format is
 	// invalid.
-	ErrInvalidMessageFormat = errors.New("invalid message format")
+	ErrInvalidSignedURL = errors.New("invalid signed URL")
 	// ErrExpired is returned by when the signed URL's expiry has been
 	// exceeded.
 	ErrExpired = errors.New("URL has expired")
+	// Default formatter is the query formatter.
+	DefaultFormatter = WithQueryFormatter()
 )
 
 // Signer is capable of signing and verifying signed URLs with an expiry.
@@ -29,6 +33,7 @@ type Signer struct {
 	hash      hash.Hash
 	dirty     bool
 	skipQuery bool
+	prefix    string
 
 	Formatter
 }
@@ -48,12 +53,15 @@ func New(key []byte, opts ...Option) *Signer {
 		hash, _ = blake2b.New256(key[0:64])
 	}
 	s := &Signer{
-		hash:      hash,
-		Formatter: &URLPathFormatter{Prefix: "/signed/"},
+		hash: hash,
 	}
+	DefaultFormatter(s)
+
+	// Leave caller options til last so that they override defaults.
 	for _, o := range opts {
 		o(s)
 	}
+
 	return s
 }
 
@@ -69,60 +77,91 @@ func SkipQuery() Option {
 	}
 }
 
+// PrefixPath prefixes the signed URL's path with a string. This can make it easier for a server
+// to differentiate between signed and non-signed URLs. Note: the prefix is not
+// part of the signature calculation.
+func PrefixPath(prefix string) Option {
+	return func(s *Signer) {
+		s.prefix = prefix
+	}
+}
+
+// WithQueryFormatter instructs Signer to use query parameters to store the signature
+// and expiry in a signed URL.
+func WithQueryFormatter() Option {
+	return func(s *Signer) {
+		s.Formatter = &QueryFormatter{s}
+	}
+}
+
+// WithPathFormatter instructs Signer to store the signature and expiry in the
+// path of a signed URL.
+func WithPathFormatter() Option {
+	return func(s *Signer) {
+		s.Formatter = &PathFormatter{s}
+	}
+}
+
 // Sign generates a signed URL with the given lifespan.
-func (s *Signer) Sign(u string, lifespan time.Duration) (string, error) {
-	parsed, err := url.ParseRequestURI(u)
-	if err != nil {
-		return "", err
-	}
-	// retrieve signable part of URL
-	data, err := s.parseURL(parsed)
+func (s *Signer) Sign(unsigned string, lifespan time.Duration) (string, error) {
+	u, err := url.ParseRequestURI(unsigned)
 	if err != nil {
 		return "", err
 	}
 
-	// calculate expiry
-	exp := time.Now().Add(lifespan)
-	// add expiry to data to create the payload
-	payload := s.AddExpiry(exp, []byte(data))
+	if s.skipQuery {
+		// remove query from signature calculation
+		u.RawQuery = ""
+	}
+
+	expiry := time.Now().Add(lifespan)
+	s.AddExpiry(u, expiry)
+
 	// sign payload creating a signature
-	signature := s.sign(payload)
-	// add signature to payload to create the signed data
-	data = s.AddSignature(signature, payload)
+	sig := s.sign([]byte(u.String()))
 
-	// return updated URL
-	return s.updateURL(parsed, data), nil
+	// add signature to url
+	s.AddSignature(u, sig)
+
+	if s.prefix != "" {
+		u.Path = path.Join(s.prefix, u.Path)
+	}
+
+	// return signed URL
+	return u.String(), nil
 }
 
 // Verify verifies a signed URL
-func (s *Signer) Verify(u string) error {
-	parsed, err := url.ParseRequestURI(u)
-	if err != nil {
-		return err
-	}
-	// retrieve signable part of URL
-	data, err := s.parseURL(parsed)
+func (s *Signer) Verify(signed string) error {
+	u, err := url.ParseRequestURI(signed)
 	if err != nil {
 		return err
 	}
 
-	// get signature and payload from data
-	signature, payload, err := s.ExtractSignature([]byte(data))
+	if !strings.HasPrefix(u.Path, s.prefix) {
+		return ErrInvalidSignedURL
+	}
+	u.Path = u.Path[len(s.prefix):]
+
+	// Extract signature from url, returning signature and url without
+	// signature, which is the input for the signature computation.
+	u, sig, err := s.ExtractSignature(u)
 	if err != nil {
 		return err
 	}
+
 	// create another signature for comparison
-	compare := s.sign(payload)
-	if subtle.ConstantTimeCompare([]byte(signature), compare) != 1 {
+	compare := s.sign([]byte(u.String()))
+	if subtle.ConstantTimeCompare(sig, compare) != 1 {
 		return ErrInvalidSignature
 	}
 
 	// get expiry from payload
-	exp, _, err := s.ExtractExpiry(payload)
+	_, expiry, err := s.ExtractExpiry(u)
 	if err != nil {
 		return err
 	}
-	if time.Now().After(exp) {
+	if time.Now().After(expiry) {
 		return ErrExpired
 	}
 
@@ -140,42 +179,4 @@ func (s *Signer) sign(data []byte) []byte {
 	s.dirty = true
 	s.hash.Write(data)
 	return s.hash.Sum(nil)
-}
-
-// updateURL updates the unsigned url with the signable part.
-func (s *Signer) updateURL(u *url.URL, msg []byte) string {
-	if s.skipQuery {
-		u.Path = string(msg)
-		return u.String()
-	}
-
-	questionMark := 0
-	for i, b := range msg {
-		if b == '?' {
-			questionMark = i
-			break
-		}
-	}
-	if questionMark != 0 {
-		u.Path = string(msg[:questionMark])
-		// check whether there is anything after '?'
-		if len(msg) > questionMark {
-			u.RawQuery = string(msg[questionMark+1:])
-		}
-	} else {
-		u.Path = string(msg)
-	}
-	return u.String()
-}
-
-// parseURL parses the signable part of an unsigned URL, which is the path and
-// optionally the query as well.
-func (s *Signer) parseURL(u *url.URL) ([]byte, error) {
-	signable := u.Path
-	if !s.skipQuery {
-		if u.RawQuery != "" {
-			signable = signable + "?" + u.RawQuery
-		}
-	}
-	return []byte(signable), nil
 }

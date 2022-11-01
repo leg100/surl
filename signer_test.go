@@ -2,6 +2,7 @@ package surl
 
 import (
 	"net/url"
+	"path"
 	"testing"
 	"time"
 
@@ -10,67 +11,89 @@ import (
 )
 
 func TestSigner(t *testing.T) {
-	sign := New([]byte("abc123"))
-
-	tests := []struct {
-		name string
-		url  string
+	formatters := []struct {
+		name      string
+		formatter Option
 	}{
 		{
-			name: "with query",
-			url:  "https://example.com/a/b/c?baz=cow&foo=bar",
+			name:      "by_path",
+			formatter: WithPathFormatter(),
 		},
 		{
-			name: "without query",
-			url:  "https://example.com/a/b/c",
-		},
-		{
-			name: "with only question mark",
-			url:  "https://example.com/a/b/c?",
-		},
-		{
-			name: "only absolute path",
-			url:  "/a/b/c",
+			name:      "by_query",
+			formatter: WithQueryFormatter(),
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			signed, err := sign.Sign(tt.url, time.Second*10)
-			require.NoError(t, err)
 
-			// check valid URL
-			_, err = url.Parse(signed)
-			require.NoError(t, err)
-
-			// check valid signature
-			err = sign.Verify(signed)
-			require.NoError(t, err)
-		})
+	opts := []struct {
+		name    string
+		options []Option
+	}{
+		{
+			name: "no opts",
+		},
+		{
+			name:    "with prefix",
+			options: []Option{PrefixPath("/signed")},
+		},
+		{
+			name:    "skip query",
+			options: []Option{SkipQuery()},
+		},
+		{
+			name:    "skip query and with prefix",
+			options: []Option{SkipQuery(), PrefixPath("/signed")},
+		},
 	}
 
-	t.Run("verifiable", func(t *testing.T) {
-		// this URL was created with a maximum lifespan:
-		// u := "https://example.com/a/b/c?baz=cow&foo=bar"
-		// signed, err := sign.Sign(u, time.Duration(math.MaxInt64))
-		u := "https://example.com/signed/_BGBJ-6OcP6GnoQz071_rU_VfMWRbi0MGLLQhfxesRg.10887835696/a/b/c?baz=cow&foo=bar"
-		err := sign.Verify(u)
-		require.NoError(t, err)
-	})
+	inputs := []struct {
+		name     string
+		unsigned string
+	}{
+		{
+			name:     "with query",
+			unsigned: "https://example.com/a/b/c?foo=bar",
+		},
+		{
+			name:     "without query",
+			unsigned: "https://example.com/a/b/c",
+		},
+		{
+			name:     "with only question mark",
+			unsigned: "https://example.com/a/b/c?",
+		},
+		{
+			name:     "absolute path",
+			unsigned: "/a/b/c",
+		},
+	}
+	// invoke test for each combination of unsigned url, formatter, and set of
+	// options
+	for _, tt := range inputs {
+		for _, f := range formatters {
+			for _, opt := range opts {
+				options := append(opt.options, f.formatter)
+				signer := New([]byte("abc123"), options...)
 
-	// Demonstrate how changing the query string invalidates the signed URL
-	t.Run("do not skip query", func(t *testing.T) {
-		u := "https://example.com/a/b/c?foo=bar"
-		signed, err := sign.Sign(u, time.Minute)
-		require.NoError(t, err)
+				t.Run(path.Join(tt.name, f.name, opt.name), func(t *testing.T) {
+					signed, err := signer.Sign(tt.unsigned, time.Second*10)
+					require.NoError(t, err)
 
-		parsed, err := url.Parse(signed)
-		require.NoError(t, err)
-		parsed.RawQuery = "page_num=3&page_size=20"
-		signed = parsed.String()
+					// check valid URL
+					_, err = url.Parse(signed)
+					require.NoError(t, err)
 
-		err = sign.Verify(signed)
-		assert.Equal(t, ErrInvalidSignature, err)
-	})
+					// check valid signature
+					err = signer.Verify(signed)
+					require.NoError(t, err)
+				})
+			}
+		}
+	}
+}
+
+func TestSigner_SkipQuery(t *testing.T) {
+	signer := New([]byte("abc123"))
 
 	// Demonstrate the SkipQuery option by changing the
 	// query string on the signed URL and showing it still verifies.
@@ -81,51 +104,61 @@ func TestSigner(t *testing.T) {
 		signed, err := sign.Sign(u, time.Minute)
 		require.NoError(t, err)
 
-		parsed, err := url.Parse(signed)
-		require.NoError(t, err)
-		parsed.RawQuery = "page_num=3&page_size=20"
-		signed = parsed.String()
+		signed = signed + "&page_num=3&page_size=20"
 
 		err = sign.Verify(signed)
 		require.NoError(t, err)
 	})
 
-	t.Run("expired", func(t *testing.T) {
-		u := "https://example.com/a/b/c?baz=cow&foo=bar"
-		signed, err := sign.Sign(u, time.Duration(0))
+	// Demonstrate how changing the query string invalidates the signed URL
+	t.Run("do not skip query", func(t *testing.T) {
+		u := "https://example.com/a/b/c?foo=bar"
+		signed, err := signer.Sign(u, time.Minute)
 		require.NoError(t, err)
 
-		err = sign.Verify(signed)
+		signed = signed + "&page_num=3&page_size=20"
+
+		err = signer.Verify(signed)
+		assert.Equal(t, ErrInvalidSignature, err)
+	})
+}
+
+func TestSigner_Prefix(t *testing.T) {
+	signer := New([]byte("abc123"), PrefixPath("/signed"))
+
+	t.Run("invalid prefix", func(t *testing.T) {
+		err := signer.Verify("http://abc.com/wrongprefix/foo/bar?expiry=123&signature=fJLFKJ3903")
+		assert.Equal(t, ErrInvalidSignedURL, err)
+	})
+}
+
+func TestSigner_Errors(t *testing.T) {
+	t.Run("expired", func(t *testing.T) {
+		signer := New([]byte("abc123"))
+
+		u := "https://example.com/a/b/c?baz=cow&foo=bar"
+		signed, err := signer.Sign(u, time.Duration(0))
+		require.NoError(t, err)
+
+		err = signer.Verify(signed)
 		assert.Equal(t, ErrExpired, err)
 	})
 
 	t.Run("relative path", func(t *testing.T) {
-		_, err := sign.Sign("foo/bar", time.Minute)
+		signer := New([]byte("abc123"))
+		_, err := signer.Sign("foo/bar", time.Minute)
 		assert.Error(t, err)
 	})
 
-	t.Run("invalid prefix", func(t *testing.T) {
-		err := sign.Verify("http://abc.com/wrongprefix/fJLFKJ3903.123/foo/bar")
-		assert.Equal(t, ErrInvalidMessageFormat, err)
-	})
-
-	t.Run("invalid format", func(t *testing.T) {
-		err := sign.Verify("http://abc.com/signed/fkljjlFJ903$123/foo/bar")
-		assert.Equal(t, ErrInvalidMessageFormat, err)
-	})
-
-	t.Run("invalid signature", func(t *testing.T) {
-		err := sign.Verify("http://abc.com/signed/MICKEYMOUSE.123/foo/bar")
-		assert.Equal(t, ErrInvalidSignature, err)
-	})
-
 	t.Run("empty url", func(t *testing.T) {
-		_, err := sign.Sign("", 10*time.Second)
+		signer := New([]byte("abc123"))
+		_, err := signer.Sign("", 10*time.Second)
 		assert.Error(t, err)
 	})
 
 	t.Run("not a url", func(t *testing.T) {
-		_, err := sign.Sign("cod", 10*time.Second)
+		signer := New([]byte("abc123"))
+		_, err := signer.Sign("cod", 10*time.Second)
 		assert.Error(t, err)
 	})
 }
