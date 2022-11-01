@@ -30,7 +30,7 @@ func main() {
 	signed, _ := signer.Sign("https://example.com/a/b/c?foo=bar", time.Hour)
 	fmt.Println("signed url:", signed)
 	// Outputs something like:
-	// https://example.com/signed/pTn2am3eh8Ndz7ZTb6ya2gOMA5XtnFRd-1M__TNQr9o.1664441797/a/b/c?foo=bar
+	// https://example.com/a/b/c?expiry=1667331055&foo=bar&signature=TGvxmRwpoAUt9YEIbeJ164lMYrzA2DBnYB9Lcy9m1T
 
 	err := signer.Verify(signed)
 	if err != nil {
@@ -39,7 +39,6 @@ func main() {
 	fmt.Println("verification succeeded")
 }
 ```
-
 
 ## Notes
 
