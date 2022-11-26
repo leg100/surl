@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/leg100/surl"
@@ -18,7 +19,7 @@ func main() {
 
 	err := signer.Verify(signed)
 	if err != nil {
-		fmt.Println("verification failed:", err.Error())
+		log.Fatal("verification failed: ", err.Error())
 	}
 	fmt.Println("verification succeeded")
 }
