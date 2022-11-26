@@ -25,6 +25,20 @@ func TestSigner(t *testing.T) {
 		},
 	}
 
+	encoders := []struct {
+		name    string
+		encoder Option
+	}{
+		{
+			name:    "decimal",
+			encoder: WithDecimalExpiry(),
+		},
+		{
+			name:    "base58",
+			encoder: WithBase58Expiry(),
+		},
+	}
+
 	opts := []struct {
 		name    string
 		options []Option
@@ -67,26 +81,28 @@ func TestSigner(t *testing.T) {
 			unsigned: "/a/b/c",
 		},
 	}
-	// invoke test for each combination of unsigned url, formatter, and set of
+	// invoke test for each combination of unsigned url, formatter, encoder, and set of
 	// options
 	for _, tt := range inputs {
 		for _, f := range formatters {
-			for _, opt := range opts {
-				options := append(opt.options, f.formatter)
-				signer := New([]byte("abc123"), options...)
+			for _, enc := range encoders {
+				for _, opt := range opts {
+					options := append(opt.options, f.formatter, enc.encoder)
+					signer := New([]byte("abc123"), options...)
 
-				t.Run(path.Join(tt.name, f.name, opt.name), func(t *testing.T) {
-					signed, err := signer.Sign(tt.unsigned, time.Second*10)
-					require.NoError(t, err)
+					t.Run(path.Join(tt.name, f.name, opt.name), func(t *testing.T) {
+						signed, err := signer.Sign(tt.unsigned, time.Second*10)
+						require.NoError(t, err)
 
-					// check valid URL
-					_, err = url.Parse(signed)
-					require.NoError(t, err)
+						// check valid URL
+						_, err = url.Parse(signed)
+						require.NoError(t, err)
 
-					// check valid signature
-					err = signer.Verify(signed)
-					require.NoError(t, err)
-				})
+						// check valid signature
+						err = signer.Verify(signed)
+						require.NoError(t, err)
+					})
+				}
 			}
 		}
 	}

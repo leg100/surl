@@ -16,21 +16,22 @@ func TestPathFormatter(t *testing.T) {
 	u := &url.URL{Path: "/foo/bar"}
 
 	expiry := time.Date(2081, time.February, 24, 4, 0, 0, 0, time.UTC)
+	encoded := StdIntEncoding(10).Encode(expiry.Unix())
 
-	f.AddExpiry(u, expiry)
+	f.AddExpiry(u, encoded)
 	assert.Equal(t, "3507595200/foo/bar", u.Path)
 
 	f.AddSignature(u, []byte("abcdef"))
 	assert.Equal(t, "/YWJjZGVm.3507595200/foo/bar", u.Path)
 
-	u, sig, err := f.ExtractSignature(u)
+	sig, err := f.ExtractSignature(u)
 	require.NoError(t, err)
 	assert.Equal(t, "abcdef", string(sig))
 	assert.Equal(t, "3507595200/foo/bar", u.Path)
 
-	u, got, err := f.ExtractExpiry(u)
+	got, err := f.ExtractExpiry(u)
 	require.NoError(t, err)
-	assert.Equal(t, expiry, got.UTC())
+	assert.Equal(t, encoded, got)
 	assert.Equal(t, "/foo/bar", u.Path)
 }
 
