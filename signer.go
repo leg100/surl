@@ -20,11 +20,14 @@ var (
 	// ErrInvalidSignedURL is returned when the signed URL's format is
 	// invalid.
 	ErrInvalidSignedURL = errors.New("invalid signed URL")
-	// ErrExpired is returned by when the signed URL's expiry has been
+	// ErrExpired is returned when the signed URL's expiry has been
 	// exceeded.
 	ErrExpired = errors.New("URL has expired")
+
 	// Default formatter is the query formatter.
 	DefaultFormatter = WithQueryFormatter()
+	// Default expiry encoding is base10 (decimal)
+	DefaultExpiryEncoder = WithDecimalExpiry()
 )
 
 // Signer is capable of signing and verifying signed URLs with an expiry.
@@ -36,6 +39,7 @@ type Signer struct {
 	prefix    string
 
 	Formatter
+	IntEncoding
 }
 
 // New constructs a new signer, performing the one-off task of generating a
@@ -56,6 +60,7 @@ func New(key []byte, opts ...Option) *Signer {
 		hash: hash,
 	}
 	DefaultFormatter(s)
+	DefaultExpiryEncoder(s)
 
 	// Leave caller options til last so that they override defaults.
 	for _, o := range opts {
@@ -102,6 +107,20 @@ func WithPathFormatter() Option {
 	}
 }
 
+// WithDecimalExpiry instructs Signer to use base10 to encode the expiry
+func WithDecimalExpiry() Option {
+	return func(s *Signer) {
+		s.IntEncoding = StdIntEncoding(10)
+	}
+}
+
+// WithBase58Expiry instructs Signer to use base58 to encode the expiry
+func WithBase58Expiry() Option {
+	return func(s *Signer) {
+		s.IntEncoding = &Base58Encoding{}
+	}
+}
+
 // Sign generates a signed URL with the given lifespan.
 func (s *Signer) Sign(unsigned string, lifespan time.Duration) (string, error) {
 	u, err := url.ParseRequestURI(unsigned)
@@ -115,7 +134,9 @@ func (s *Signer) Sign(unsigned string, lifespan time.Duration) (string, error) {
 	}
 
 	expiry := time.Now().Add(lifespan)
-	s.AddExpiry(u, expiry)
+	encodedExpiry := s.Encode(expiry.Unix())
+
+	s.AddExpiry(u, encodedExpiry)
 
 	// sign payload creating a signature
 	sig := s.sign([]byte(u.String()))
@@ -143,9 +164,9 @@ func (s *Signer) Verify(signed string) error {
 	}
 	u.Path = u.Path[len(s.prefix):]
 
-	// Extract signature from url, returning signature and url without
-	// signature, which is the input for the signature computation.
-	u, sig, err := s.ExtractSignature(u)
+	// extract signature from url, removing it from the URL, which is then the
+	// input for the signature computation.
+	sig, err := s.ExtractSignature(u)
 	if err != nil {
 		return err
 	}
@@ -157,11 +178,15 @@ func (s *Signer) Verify(signed string) error {
 	}
 
 	// get expiry from payload
-	_, expiry, err := s.ExtractExpiry(u)
+	encodedExpiry, err := s.ExtractExpiry(u)
 	if err != nil {
 		return err
 	}
-	if time.Now().After(expiry) {
+	expiry, err := s.Decode(encodedExpiry)
+	if err != nil {
+		return err
+	}
+	if time.Now().After(time.Unix(expiry, 0)) {
 		return ErrExpired
 	}
 
