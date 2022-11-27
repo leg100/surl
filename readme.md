@@ -48,20 +48,70 @@ The format and behaviour of signed URLs can be configured by passing options to 
 ### Query Formatter
 
 ```go
-surl.New(secret, WithQueryFormatter())
+surl.New(secret, surl.WithQueryFormatter())
 ```
-The query formatter is the default format. It stores the signature and expiry in query parameters.
+The query formatter is the default format. It stores the signature and expiry in query parameters:
+
+```bash
+https://example.com/a/b/c?expiry=1667331055&foo=bar&signature=TGvxmRwpoAUt9YEIbeJ164lMYrzA2DBnYB9Lcy9m1T
+```
 
 ### Path Formatter
 
 ```go
-surl.New(secret, WithPathFormatter())
+surl.New(secret, surl.WithPathFormatter())
 ```
 
 The path formatter stores the signature and expiry in the path itself:
 
 ```bash
 https://example.com/PaMIbZQ6wxPdHXVLfIGwZBULo-FSTdt7-bCLZjBPPUE.1669574162/a/b/c?foo=bar
+```
+
+### Prefix Path
+
+```go
+surl.New(secret, surl.PrefixPath("/signed"))
+```
+
+Prefix the signed URL path:
+
+```bash
+https://example.com/signed/a/b/c?expiry=1669574398&foo=bar&signature=NvIrIFcc1OaKgeVSN685tSD26PTdjlUxxSZRE18Wk_8
+```
+
+Note: a slash is implicitly inserted between the prefix and the rest of the path.
+
+### Skip Query
+
+```go
+surl.New(secret, surl.SkipQuery())
+```
+
+Skip the query string when computing the signature. This is useful, say, if you have pagination query parameters but you want to use the same signed URL regardless of their value. See the [example](./example/skip_query/main.go).
+
+### Decimal Encoding of Expiry
+
+```go
+surl.New(secret, surl.WithDecimalExpiry())
+```
+
+Encode expiry in decimal. This is the default.
+
+```bash
+https://example.com/a/b/c?expiry=1667331055&foo=bar&signature=TGvxmRwpoAUt9YEIbeJ164lMYrzA2DBnYB9Lcy9m1T
+```
+
+### Base58 Encoding of Expiry
+
+```go
+surl.New(secret, surl.WithBase58Expiry())
+```
+
+Encode the expiry using Base58:
+
+```bash
+https://example.com/a/b/c?expiry=3xx1vi&foo=bar&signature=-mwCtMLTBgDkShZTbBcHjRCRXtO_ZYPE0cmrh3u6S-s
 ```
 
 ## Notes
