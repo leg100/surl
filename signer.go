@@ -29,7 +29,7 @@ var (
 	// Default formatter is the query formatter.
 	DefaultFormatter = WithQueryFormatter()
 	// Default expiry encoding is base10 (decimal)
-	DefaultExpiryEncoder = WithDecimalExpiry()
+	DefaultExpiryFormatter = WithDecimalExpiry()
 )
 
 // Signer is capable of signing and verifying signed URLs with an expiry.
@@ -38,10 +38,10 @@ type Signer struct {
 	hash        hash.Hash
 	dirty       bool
 	prefix      string
-	payloadOpts PayloadOptions
+	payloadOpts payloadOptions
 
-	Formatter
-	IntEncoding
+	formatter
+	intEncoding
 }
 
 // New constructs a new signer, performing the one-off task of generating a
@@ -62,7 +62,7 @@ func New(key []byte, opts ...Option) *Signer {
 		hash: hash,
 	}
 	DefaultFormatter(s)
-	DefaultExpiryEncoder(s)
+	DefaultExpiryFormatter(s)
 
 	// Leave caller options til last so that they override defaults.
 	for _, o := range opts {
@@ -75,7 +75,7 @@ func New(key []byte, opts ...Option) *Signer {
 // Option permits customising the construction of a Signer
 type Option func(*Signer)
 
-// SkipQuery instructs Signer to skip the query string when calculating the
+// SkipQuery instructs Signer to skip the query string when computing the
 // signature. This is useful, say, if you have pagination query parameters but
 // you want to use the same signed URL regardless of their value.
 func SkipQuery() Option {
@@ -86,7 +86,7 @@ func SkipQuery() Option {
 
 // PrefixPath prefixes the signed URL's path with a string. This can make it easier for a server
 // to differentiate between signed and non-signed URLs. Note: the prefix is not
-// part of the signature calculation.
+// part of the signature computation.
 func PrefixPath(prefix string) Option {
 	return func(s *Signer) {
 		s.prefix = prefix
@@ -97,7 +97,7 @@ func PrefixPath(prefix string) Option {
 // and expiry in a signed URL.
 func WithQueryFormatter() Option {
 	return func(s *Signer) {
-		s.Formatter = &QueryFormatter{}
+		s.formatter = &queryFormatter{}
 	}
 }
 
@@ -105,21 +105,21 @@ func WithQueryFormatter() Option {
 // path of a signed URL.
 func WithPathFormatter() Option {
 	return func(s *Signer) {
-		s.Formatter = &PathFormatter{}
+		s.formatter = &pathFormatter{}
 	}
 }
 
 // WithDecimalExpiry instructs Signer to use base10 to encode the expiry
 func WithDecimalExpiry() Option {
 	return func(s *Signer) {
-		s.IntEncoding = StdIntEncoding(10)
+		s.intEncoding = stdIntEncoding(10)
 	}
 }
 
 // WithBase58Expiry instructs Signer to use base58 to encode the expiry
 func WithBase58Expiry() Option {
 	return func(s *Signer) {
-		s.IntEncoding = &Base58Encoding{}
+		s.intEncoding = &base58Encoding{}
 	}
 }
 
@@ -153,7 +153,8 @@ func (s *Signer) Sign(unsigned string, lifespan time.Duration) (string, error) {
 	return u.String(), nil
 }
 
-// Verify verifies a signed URL
+// Verify verifies a signed URL, validating its signature and ensuring it is
+// unexpired.
 func (s *Signer) Verify(signed string) error {
 	u, err := url.ParseRequestURI(signed)
 	if err != nil {

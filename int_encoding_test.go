@@ -10,31 +10,31 @@ import (
 func TestIntEncoding(t *testing.T) {
 	tests := []struct {
 		name     string
-		encoding IntEncoding
+		encoding intEncoding
 		input    int64
 		want     string
 	}{
 		{
 			name:     "decimal",
-			encoding: StdIntEncoding(10),
+			encoding: stdIntEncoding(10),
 			input:    3507595200,
 			want:     "3507595200",
 		},
 		{
 			name:     "hex",
-			encoding: StdIntEncoding(16),
+			encoding: stdIntEncoding(16),
 			input:    3507595200,
 			want:     "d111a7c0",
 		},
 		{
 			name:     "base58",
-			encoding: &Base58Encoding{},
+			encoding: &base58Encoding{},
 			input:    3507595200,
 			want:     "6kXkRj",
 		},
 		{
 			name:     "base64",
-			encoding: &Base64Encoding{},
+			encoding: &base64Encoding{},
 			input:    3507595200,
 			want:     "AAAAANERp8A",
 		},

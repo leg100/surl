@@ -43,9 +43,4 @@ func main() {
 
 ## Notes
 
-* Only the path and query are signed; the scheme and hostname are skipped when producing the signature. The query too can be skipped with the `SkipQuery` option.
 * Any change in the order of the query parameters in a signed URL renders it invalid, unless `SkipQuery` is specified.
-
-## TODO:
-
-* base58 encode expiry

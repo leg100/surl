@@ -4,13 +4,13 @@ import (
 	"net/url"
 )
 
-// Formatter adds/extracts the signature and expiry to/from a URL according to a
+// formatter adds/extracts the signature and expiry to/from a URL according to a
 // specific format
-type Formatter interface {
+type formatter interface {
 	// AddExpiry adds an expiry to the unsigned URL
 	AddExpiry(unsigned *url.URL, expiry string)
 	// BuildPayload produces a payload for signature computation
-	BuildPayload(url.URL, PayloadOptions) string
+	BuildPayload(url.URL, payloadOptions) string
 	// AddSignature adds a signature to a URL
 	AddSignature(*url.URL, string)
 	// ExtractSignature extracts a signature from a URL
@@ -19,6 +19,6 @@ type Formatter interface {
 	ExtractExpiry(*url.URL) (string, error)
 }
 
-type PayloadOptions struct {
+type payloadOptions struct {
 	SkipQuery bool
 }

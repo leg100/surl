@@ -183,4 +183,30 @@ func TestSigner_Errors(t *testing.T) {
 		_, err := signer.Sign("cod", 10*time.Second)
 		assert.Error(t, err)
 	})
+
+	t.Run("scheme has changed", func(t *testing.T) {
+		signer := New([]byte("abc123"))
+		signed, err := signer.Sign("https://example.com/a/b/c?baz=cow&foo=bar", 10*time.Second)
+		require.NoError(t, err)
+
+		hacked, err := url.Parse(signed)
+		require.NoError(t, err)
+		hacked.Scheme = "http"
+
+		err = signer.Verify(hacked.String())
+		assert.Error(t, err)
+	})
+
+	t.Run("hostname has changed", func(t *testing.T) {
+		signer := New([]byte("abc123"))
+		signed, err := signer.Sign("https://example.com/a/b/c?baz=cow&foo=bar", 10*time.Second)
+		require.NoError(t, err)
+
+		hacked, err := url.Parse(signed)
+		require.NoError(t, err)
+		hacked.Host = "hacked.com:1337"
+
+		err = signer.Verify(hacked.String())
+		assert.Error(t, err)
+	})
 }
