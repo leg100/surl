@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	// ErrInvalidSignature is returned when the provided token's
+	// ErrInvalidSignature is returned when the provided secret's
 	// signature is not valid.
 	ErrInvalidSignature = errors.New("invalid signature")
 	// ErrInvalidSignedURL is returned when the signed URL's format is
@@ -46,16 +46,12 @@ type Signer struct {
 
 // New constructs a new signer, performing the one-off task of generating a
 // secure hash from the key. The key must be between 0 and 64 bytes long;
-// anything longer is stripped off.
+// anything longer is truncated. Options alter the default format and behaviour
+// of signed URLs.
 func New(key []byte, opts ...Option) *Signer {
 	hash, err := blake2b.New256(key)
 	if err != nil {
-		// The only possible error that can be returned here is if the key
-		// is larger than 64 bytes - which the blake2b hash will not accept.
-		// This is a case that is so easily avoidable when using this package
-		// and since chaining is convenient for this package.  We're going
-		// to do the below to handle this possible case so we don't have
-		// to return an error.
+		// Safely ignore one and only error regarding keys longer than 64 bytes.
 		hash, _ = blake2b.New256(key[0:64])
 	}
 	s := &Signer{
@@ -80,7 +76,7 @@ type Option func(*Signer)
 // you want to use the same signed URL regardless of their value.
 func SkipQuery() Option {
 	return func(s *Signer) {
-		s.payloadOpts.SkipQuery = true
+		s.payloadOpts.skipQuery = true
 	}
 }
 
@@ -133,17 +129,17 @@ func (s *Signer) Sign(unsigned string, lifespan time.Duration) (string, error) {
 	// Add expiry to unsigned URL
 	expiry := time.Now().Add(lifespan)
 	encodedExpiry := s.Encode(expiry.Unix())
-	s.AddExpiry(u, encodedExpiry)
+	s.addExpiry(u, encodedExpiry)
 
 	// Build payload for signature computation
-	payload := s.BuildPayload(*u, s.payloadOpts)
+	payload := s.buildPayload(*u, s.payloadOpts)
 
 	// Sign payload creating a signature
 	sig := s.sign([]byte(payload))
 
 	// Add signature to url
 	encodedSig := base64.RawURLEncoding.EncodeToString(sig)
-	s.AddSignature(u, encodedSig)
+	s.addSignature(u, encodedSig)
 
 	if s.prefix != "" {
 		u.Path = path.Join(s.prefix, u.Path)
@@ -166,7 +162,7 @@ func (s *Signer) Verify(signed string) error {
 	}
 	u.Path = u.Path[len(s.prefix):]
 
-	encodedSig, err := s.ExtractSignature(u)
+	encodedSig, err := s.extractSignature(u)
 	if err != nil {
 		return err
 	}
@@ -176,7 +172,7 @@ func (s *Signer) Verify(signed string) error {
 	}
 
 	// build the payload for signature computation
-	payload := s.BuildPayload(*u, s.payloadOpts)
+	payload := s.buildPayload(*u, s.payloadOpts)
 
 	// create another signature for comparison and compare
 	compare := s.sign([]byte(payload))
@@ -185,7 +181,7 @@ func (s *Signer) Verify(signed string) error {
 	}
 
 	// get expiry from signed URL
-	encodedExpiry, err := s.ExtractExpiry(u)
+	encodedExpiry, err := s.extractExpiry(u)
 	if err != nil {
 		return err
 	}

@@ -18,18 +18,18 @@ func TestQueryFormatter(t *testing.T) {
 	expiry := time.Date(2081, time.February, 24, 4, 0, 0, 0, time.UTC)
 	encoded := stdIntEncoding(10).Encode(expiry.Unix())
 
-	f.AddExpiry(u, encoded)
+	f.addExpiry(u, encoded)
 	assert.Equal(t, "expiry=3507595200&foo=bar", u.RawQuery)
 
-	f.AddSignature(u, "abcdef")
+	f.addSignature(u, "abcdef")
 	assert.Equal(t, "expiry=3507595200&foo=bar&signature=abcdef", u.RawQuery)
 
-	sig, err := f.ExtractSignature(u)
+	sig, err := f.extractSignature(u)
 	require.NoError(t, err)
 	assert.Equal(t, "abcdef", string(sig))
 	assert.Equal(t, "expiry=3507595200&foo=bar", u.RawQuery)
 
-	got, err := f.ExtractExpiry(u)
+	got, err := f.extractExpiry(u)
 	require.NoError(t, err)
 	assert.Equal(t, encoded, got)
 	assert.Equal(t, "foo=bar", u.RawQuery)

@@ -7,18 +7,18 @@ import (
 // formatter adds/extracts the signature and expiry to/from a URL according to a
 // specific format
 type formatter interface {
-	// AddExpiry adds an expiry to the unsigned URL
-	AddExpiry(unsigned *url.URL, expiry string)
-	// BuildPayload produces a payload for signature computation
-	BuildPayload(url.URL, payloadOptions) string
-	// AddSignature adds a signature to a URL
-	AddSignature(*url.URL, string)
-	// ExtractSignature extracts a signature from a URL
-	ExtractSignature(*url.URL) (string, error)
-	// ExtractExpiry extracts an expiry from a URL
-	ExtractExpiry(*url.URL) (string, error)
+	// addExpiry adds an expiry to the unsigned URL
+	addExpiry(unsigned *url.URL, expiry string)
+	// buildPayload produces a payload for signature computation
+	buildPayload(url.URL, payloadOptions) string
+	// addSignature adds a signature to a URL
+	addSignature(*url.URL, string)
+	// extractSignature extracts a signature from a URL
+	extractSignature(*url.URL) (string, error)
+	// extractExpiry extracts an expiry from a URL
+	extractExpiry(*url.URL) (string, error)
 }
 
 type payloadOptions struct {
-	SkipQuery bool
+	skipQuery bool
 }
