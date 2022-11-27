@@ -1,7 +1,6 @@
 package surl
 
 import (
-	"encoding/base64"
 	"fmt"
 	"net/url"
 )
@@ -22,26 +21,18 @@ func (f *QueryFormatter) AddExpiry(unsigned *url.URL, expiry string) {
 
 // AddSignature adds signature as a query parameter alongside the expiry e.g.
 // /foo/bar?expiry=<exp> -> /foo/bar?expiry=<exp>&signature=<sig>
-func (f *QueryFormatter) AddSignature(payload *url.URL, sig []byte) {
-	encoded := base64.RawURLEncoding.EncodeToString(sig)
-
+func (f *QueryFormatter) AddSignature(payload *url.URL, sig string) {
 	q := payload.Query()
-	q.Add("signature", encoded)
+	q.Add("signature", sig)
 	payload.RawQuery = q.Encode()
 }
 
-// ExtractSignature decodes and splits the signature and payload from the signed message.
-func (f *QueryFormatter) ExtractSignature(u *url.URL) ([]byte, error) {
+// ExtractSignature splits the signature and payload from the signed message.
+func (f *QueryFormatter) ExtractSignature(u *url.URL) (string, error) {
 	q := u.Query()
-	encoded := q.Get("signature")
-	if encoded == "" {
-		return nil, fmt.Errorf("%w: %s", ErrInvalidSignedURL, u.String())
-	}
-
-	// decode base64-encoded sig into bytes
-	sig, err := base64.RawURLEncoding.DecodeString(encoded)
-	if err != nil {
-		return nil, err
+	sig := q.Get("signature")
+	if sig == "" {
+		return "", fmt.Errorf("%w: %s", ErrInvalidSignedURL, u.String())
 	}
 
 	if f.signer.skipQuery {
@@ -57,15 +48,15 @@ func (f *QueryFormatter) ExtractSignature(u *url.URL) ([]byte, error) {
 	return sig, nil
 }
 
-// ExtractExpiry decodes and splits the expiry and data from the payload.
+// ExtractExpiry splits the expiry and data from the payload.
 func (f *QueryFormatter) ExtractExpiry(u *url.URL) (string, error) {
 	q := u.Query()
-	encoded := q.Get("expiry")
-	if encoded == "" {
+	expiry := q.Get("expiry")
+	if expiry == "" {
 		return "", ErrInvalidSignedURL
 	}
 	q.Del("expiry")
 	u.RawQuery = q.Encode()
 
-	return encoded, nil
+	return expiry, nil
 }

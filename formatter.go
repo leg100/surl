@@ -10,9 +10,9 @@ type Formatter interface {
 	// AddExpiry adds an expiry to a URL
 	AddExpiry(u *url.URL, expiry string)
 	// AddSignature adds a signature to a URL
-	AddSignature(*url.URL, []byte)
+	AddSignature(*url.URL, string)
 	// ExtractSignature extracts a signature from a URL
-	ExtractSignature(*url.URL) ([]byte, error)
+	ExtractSignature(*url.URL) (string, error)
 	// ExtractExpiry extracts an expiry from a URL
 	ExtractExpiry(*url.URL) (string, error)
 }

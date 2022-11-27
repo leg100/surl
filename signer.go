@@ -2,7 +2,9 @@ package surl
 
 import (
 	"crypto/subtle"
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"hash"
 	"net/url"
 	"path"
@@ -142,7 +144,8 @@ func (s *Signer) Sign(unsigned string, lifespan time.Duration) (string, error) {
 	sig := s.sign([]byte(u.String()))
 
 	// add signature to url
-	s.AddSignature(u, sig)
+	encodedSig := base64.RawURLEncoding.EncodeToString(sig)
+	s.AddSignature(u, encodedSig)
 
 	if s.prefix != "" {
 		u.Path = path.Join(s.prefix, u.Path)
@@ -166,9 +169,13 @@ func (s *Signer) Verify(signed string) error {
 
 	// extract signature from url, removing it from the URL, which is then the
 	// input for the signature computation.
-	sig, err := s.ExtractSignature(u)
+	encodedSig, err := s.ExtractSignature(u)
 	if err != nil {
 		return err
+	}
+	sig, err := base64.RawURLEncoding.DecodeString(encodedSig)
+	if err != nil {
+		return fmt.Errorf("%w: invalid base64: %s", ErrInvalidSignature, encodedSig)
 	}
 
 	// create another signature for comparison

@@ -1,8 +1,6 @@
 package surl
 
 import (
-	"encoding/base64"
-	"fmt"
 	"net/url"
 	"strings"
 )
@@ -22,26 +20,19 @@ func (f *PathFormatter) AddExpiry(unsigned *url.URL, expiry string) {
 
 // AddSignature adds signature as a path component alongside the expiry e.g.
 // abZ3G/foo/bar -> /KKLJjd3090fklaJKLJK.abZ3G/foo/bar
-func (f *PathFormatter) AddSignature(payload *url.URL, sig []byte) {
-	encoded := base64.RawURLEncoding.EncodeToString(sig)
-
-	payload.Path = "/" + encoded + "." + payload.Path
+func (f *PathFormatter) AddSignature(payload *url.URL, sig string) {
+	payload.Path = "/" + sig + "." + payload.Path
 }
 
-// ExtractSignature decodes and splits the signature and payload from the signed message.
-func (f *PathFormatter) ExtractSignature(u *url.URL) ([]byte, error) {
-	// prise apart encoded and payload
-	encoded, payload, found := strings.Cut(u.Path, ".")
+// ExtractSignature splits the signature and payload from the signed URL.
+func (f *PathFormatter) ExtractSignature(u *url.URL) (string, error) {
+	// prise apart sig and payload
+	sig, payload, found := strings.Cut(u.Path, ".")
 	if !found {
-		return nil, ErrInvalidSignedURL
+		return "", ErrInvalidSignedURL
 	}
 	// remove leading /
-	encoded = encoded[1:]
-
-	sig, err := base64.RawURLEncoding.DecodeString(encoded)
-	if err != nil {
-		return nil, fmt.Errorf("%w: invalid base64: %s", ErrInvalidSignature, encoded)
-	}
+	sig = sig[1:]
 
 	u.Path = payload
 
@@ -54,7 +45,7 @@ func (f *PathFormatter) ExtractSignature(u *url.URL) ([]byte, error) {
 	return sig, nil
 }
 
-// ExtractExpiry decodes and splits the expiry and data from the payload.
+// ExtractExpiry splits the expiry and data from the payload.
 func (*PathFormatter) ExtractExpiry(u *url.URL) (string, error) {
 	// prise apart expiry and data
 	expiry, path, found := strings.Cut(u.Path, "/")

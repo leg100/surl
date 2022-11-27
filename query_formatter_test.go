@@ -21,8 +21,8 @@ func TestQueryFormatter(t *testing.T) {
 	f.AddExpiry(u, encoded)
 	assert.Equal(t, "expiry=3507595200&foo=bar", u.RawQuery)
 
-	f.AddSignature(u, []byte("abcdef"))
-	assert.Equal(t, "expiry=3507595200&foo=bar&signature=YWJjZGVm", u.RawQuery)
+	f.AddSignature(u, "abcdef")
+	assert.Equal(t, "expiry=3507595200&foo=bar&signature=abcdef", u.RawQuery)
 
 	sig, err := f.ExtractSignature(u)
 	require.NoError(t, err)

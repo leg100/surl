@@ -21,8 +21,8 @@ func TestPathFormatter(t *testing.T) {
 	f.AddExpiry(u, encoded)
 	assert.Equal(t, "3507595200/foo/bar", u.Path)
 
-	f.AddSignature(u, []byte("abcdef"))
-	assert.Equal(t, "/YWJjZGVm.3507595200/foo/bar", u.Path)
+	f.AddSignature(u, "abcdef")
+	assert.Equal(t, "/abcdef.3507595200/foo/bar", u.Path)
 
 	sig, err := f.ExtractSignature(u)
 	require.NoError(t, err)
