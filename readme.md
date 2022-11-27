@@ -41,6 +41,29 @@ func main() {
 }
 ```
 
+## Options
+
+The format and behaviour of signed URLs can be configured by passing options to the constructor.
+
+### Query Formatter
+
+```go
+surl.New(secret, WithQueryFormatter())
+```
+The query formatter is the default format. It stores the signature and expiry in query parameters.
+
+### Path Formatter
+
+```go
+surl.New(secret, WithPathFormatter())
+```
+
+The path formatter stores the signature and expiry in the path itself:
+
+```bash
+https://example.com/PaMIbZQ6wxPdHXVLfIGwZBULo-FSTdt7-bCLZjBPPUE.1669574162/a/b/c?foo=bar
+```
+
 ## Notes
 
 * Any change in the order of the query parameters in a signed URL renders it invalid, unless `SkipQuery` is specified.
