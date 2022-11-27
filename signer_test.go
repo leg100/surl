@@ -124,6 +124,12 @@ func TestSigner_SkipQuery(t *testing.T) {
 
 		err = sign.Verify(signed)
 		require.NoError(t, err)
+
+		t.Run("check original query parameters are intact", func(t *testing.T) {
+			u, err := url.Parse(signed)
+			require.NoError(t, err)
+			assert.Equal(t, "bar", u.Query().Get("foo"))
+		})
 	})
 
 	// Demonstrate how changing the query string invalidates the signed URL

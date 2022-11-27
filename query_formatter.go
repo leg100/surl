@@ -7,16 +7,21 @@ import (
 
 // QueryFormatter includes the signature and expiry as URL query parameters
 // according to the format: /path?expiry=<exp>&signature=<sig>.
-type QueryFormatter struct {
-	signer *Signer
-}
+type QueryFormatter struct{}
 
-// AddExpiry adds expiry as a query parameter e.g. /foo/bar ->
-// /foo/bar?expiry=<exp>
 func (f *QueryFormatter) AddExpiry(unsigned *url.URL, expiry string) {
 	q := unsigned.Query()
 	q.Add("expiry", expiry)
 	unsigned.RawQuery = q.Encode()
+}
+
+func (f *QueryFormatter) BuildPayload(u url.URL, opts PayloadOptions) string {
+	if opts.SkipQuery {
+		// Remove all query params other than expiry
+		expiry := u.Query().Get("expiry")
+		u.RawQuery = url.Values{"expiry": []string{expiry}}.Encode()
+	}
+	return u.String()
 }
 
 // AddSignature adds signature as a query parameter alongside the expiry e.g.
@@ -34,16 +39,8 @@ func (f *QueryFormatter) ExtractSignature(u *url.URL) (string, error) {
 	if sig == "" {
 		return "", fmt.Errorf("%w: %s", ErrInvalidSignedURL, u.String())
 	}
-
-	if f.signer.skipQuery {
-		// remove all query params other than expiry because they don't form
-		// part of the input to the signature computation.
-		expiry := u.Query().Get("expiry")
-		u.RawQuery = url.Values{"expiry": {expiry}}.Encode()
-	} else {
-		q.Del("signature")
-		u.RawQuery = q.Encode()
-	}
+	q.Del("signature")
+	u.RawQuery = q.Encode()
 
 	return sig, nil
 }

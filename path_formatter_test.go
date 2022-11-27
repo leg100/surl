@@ -11,7 +11,7 @@ import (
 )
 
 func TestPathFormatter(t *testing.T) {
-	f := PathFormatter{&Signer{}}
+	f := PathFormatter{}
 	// unsigned url with existing path
 	u := &url.URL{Path: "/foo/bar"}
 

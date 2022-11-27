@@ -8,14 +8,21 @@ import (
 // PathFormatter includes the signature and expiry in a
 // message according to the format: <sig>.<exp>/<data>. Suitable for
 // URL paths as an alternative to using query parameters.
-type PathFormatter struct {
-	signer *Signer
-}
+type PathFormatter struct{}
 
 // AddExpiry adds expiry as a path component e.g. /foo/bar ->
 // 390830893/foo/bar
 func (f *PathFormatter) AddExpiry(unsigned *url.URL, expiry string) {
 	unsigned.Path = expiry + unsigned.Path
+}
+
+// AddExpiry adds expiry as a path component e.g. /foo/bar ->
+// 390830893/foo/bar
+func (f *PathFormatter) BuildPayload(u url.URL, opts PayloadOptions) string {
+	if opts.SkipQuery {
+		u.RawQuery = ""
+	}
+	return u.String()
 }
 
 // AddSignature adds signature as a path component alongside the expiry e.g.
@@ -35,12 +42,6 @@ func (f *PathFormatter) ExtractSignature(u *url.URL) (string, error) {
 	sig = sig[1:]
 
 	u.Path = payload
-
-	if f.signer.skipQuery {
-		// remove all query params because they don't form part of the input to
-		// the signature computation
-		u.RawQuery = ""
-	}
 
 	return sig, nil
 }

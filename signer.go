@@ -34,11 +34,11 @@ var (
 
 // Signer is capable of signing and verifying signed URLs with an expiry.
 type Signer struct {
-	mu        sync.Mutex
-	hash      hash.Hash
-	dirty     bool
-	skipQuery bool
-	prefix    string
+	mu          sync.Mutex
+	hash        hash.Hash
+	dirty       bool
+	prefix      string
+	payloadOpts PayloadOptions
 
 	Formatter
 	IntEncoding
@@ -80,7 +80,7 @@ type Option func(*Signer)
 // you want to use the same signed URL regardless of their value.
 func SkipQuery() Option {
 	return func(s *Signer) {
-		s.skipQuery = true
+		s.payloadOpts.SkipQuery = true
 	}
 }
 
@@ -97,7 +97,7 @@ func PrefixPath(prefix string) Option {
 // and expiry in a signed URL.
 func WithQueryFormatter() Option {
 	return func(s *Signer) {
-		s.Formatter = &QueryFormatter{s}
+		s.Formatter = &QueryFormatter{}
 	}
 }
 
@@ -105,7 +105,7 @@ func WithQueryFormatter() Option {
 // path of a signed URL.
 func WithPathFormatter() Option {
 	return func(s *Signer) {
-		s.Formatter = &PathFormatter{s}
+		s.Formatter = &PathFormatter{}
 	}
 }
 
@@ -130,20 +130,18 @@ func (s *Signer) Sign(unsigned string, lifespan time.Duration) (string, error) {
 		return "", err
 	}
 
-	if s.skipQuery {
-		// remove query from signature calculation
-		u.RawQuery = ""
-	}
-
+	// Add expiry to unsigned URL
 	expiry := time.Now().Add(lifespan)
 	encodedExpiry := s.Encode(expiry.Unix())
-
 	s.AddExpiry(u, encodedExpiry)
 
-	// sign payload creating a signature
-	sig := s.sign([]byte(u.String()))
+	// Build payload for signature computation
+	payload := s.BuildPayload(*u, s.payloadOpts)
 
-	// add signature to url
+	// Sign payload creating a signature
+	sig := s.sign([]byte(payload))
+
+	// Add signature to url
 	encodedSig := base64.RawURLEncoding.EncodeToString(sig)
 	s.AddSignature(u, encodedSig)
 
@@ -167,8 +165,6 @@ func (s *Signer) Verify(signed string) error {
 	}
 	u.Path = u.Path[len(s.prefix):]
 
-	// extract signature from url, removing it from the URL, which is then the
-	// input for the signature computation.
 	encodedSig, err := s.ExtractSignature(u)
 	if err != nil {
 		return err
@@ -178,13 +174,16 @@ func (s *Signer) Verify(signed string) error {
 		return fmt.Errorf("%w: invalid base64: %s", ErrInvalidSignature, encodedSig)
 	}
 
-	// create another signature for comparison
-	compare := s.sign([]byte(u.String()))
+	// build the payload for signature computation
+	payload := s.BuildPayload(*u, s.payloadOpts)
+
+	// create another signature for comparison and compare
+	compare := s.sign([]byte(payload))
 	if subtle.ConstantTimeCompare(sig, compare) != 1 {
 		return ErrInvalidSignature
 	}
 
-	// get expiry from payload
+	// get expiry from signed URL
 	encodedExpiry, err := s.ExtractExpiry(u)
 	if err != nil {
 		return err

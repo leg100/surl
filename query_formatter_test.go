@@ -11,7 +11,7 @@ import (
 )
 
 func TestQueryFormatter(t *testing.T) {
-	f := QueryFormatter{&Signer{}}
+	f := QueryFormatter{}
 	// unsigned url with existing query
 	u := &url.URL{RawQuery: "foo=bar"}
 
