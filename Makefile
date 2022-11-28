@@ -1,4 +1,4 @@
-VERSION=v1.0.6
+VERSION = $(shell git describe --tags --abbrev=0)
 
 ## clean: runs go clean
 clean:
