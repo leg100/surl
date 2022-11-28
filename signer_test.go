@@ -17,11 +17,11 @@ var (
 		formatter Option
 	}{
 		{
-			name:      "by_path",
+			name:      "path",
 			formatter: WithPathFormatter(),
 		},
 		{
-			name:      "by_query",
+			name:      "query",
 			formatter: WithQueryFormatter(),
 		},
 	}
@@ -48,7 +48,7 @@ var (
 			name: "no opts",
 		},
 		{
-			name:    "with prefix",
+			name:    "prefix",
 			options: []Option{PrefixPath("/signed")},
 		},
 		{
@@ -56,7 +56,7 @@ var (
 			options: []Option{SkipQuery()},
 		},
 		{
-			name:    "skip query and with prefix",
+			name:    "prefix and skip query",
 			options: []Option{SkipQuery(), PrefixPath("/signed")},
 		},
 	}
@@ -214,9 +214,12 @@ func TestSigner_Errors(t *testing.T) {
 	})
 }
 
-var bu string
+var (
+	bu   string
+	berr error
+)
 
-func BenchmarkSigner(b *testing.B) {
+func Benchmark(b *testing.B) {
 	secret := make([]byte, 64)
 	_, err := rand.Read(secret)
 	require.NoError(b, err)
@@ -228,7 +231,7 @@ func BenchmarkSigner(b *testing.B) {
 			for _, opt := range opts {
 				options := append(opt.options, f.formatter, enc.encoder)
 
-				b.Run(path.Join(f.name, enc.name, opt.name), func(b *testing.B) {
+				b.Run(path.Join("sign", f.name, enc.name, opt.name), func(b *testing.B) {
 					signer := New(secret, options...)
 
 					var u string
@@ -238,6 +241,18 @@ func BenchmarkSigner(b *testing.B) {
 					}
 					// store result in pkg var to to prevent compiler eliminating benchmark
 					bu = u
+				})
+
+				b.Run(path.Join("verify", f.name, enc.name, opt.name), func(b *testing.B) {
+					signer := New(secret, options...)
+					signed, _ := signer.Sign("https://example.com/a/b/c?x=1&y=2&z=3", time.Hour)
+
+					for n := 0; n < b.N; n++ {
+						// store result to prevent compiler eliminating func call
+						err = signer.Verify(signed)
+					}
+					// store result in pkg var to to prevent compiler eliminating benchmark
+					berr = err
 				})
 			}
 		}

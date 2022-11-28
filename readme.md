@@ -126,23 +126,39 @@ goos: linux
 goarch: amd64
 pkg: github.com/leg100/surl
 cpu: AMD Ryzen 7 3800X 8-Core Processor
-BenchmarkSigner/by_path/decimal/no_opts-16                514827              2451 ns/op
-BenchmarkSigner/by_path/decimal/with_prefix-16            362757              3174 ns/op
-BenchmarkSigner/by_path/decimal/skip_query-16             470324              2399 ns/op
-BenchmarkSigner/by_path/decimal/skip_query_and_with_prefix-16             365589              3052 ns/op
-BenchmarkSigner/by_path/base58/no_opts-16                                 481573              2339 ns/op
-BenchmarkSigner/by_path/base58/with_prefix-16                             466501              2809 ns/op
-BenchmarkSigner/by_path/base58/skip_query-16                              546319              2304 ns/op
-BenchmarkSigner/by_path/base58/skip_query_and_with_prefix-16              453450              2799 ns/op
-BenchmarkSigner/by_query/decimal/no_opts-16                               197506              6483 ns/op
-BenchmarkSigner/by_query/decimal/with_prefix-16                           165560              6662 ns/op
-BenchmarkSigner/by_query/decimal/skip_query-16                            157486              7489 ns/op
-BenchmarkSigner/by_query/decimal/skip_query_and_with_prefix-16            150454              7837 ns/op
-BenchmarkSigner/by_query/base58/no_opts-16                                206263              6256 ns/op
-BenchmarkSigner/by_query/base58/with_prefix-16                            161008              6787 ns/op
-BenchmarkSigner/by_query/base58/skip_query-16                             159558              7374 ns/op
-BenchmarkSigner/by_query/base58/skip_query_and_with_prefix-16             151778              7578 ns/op
+Benchmark/sign/path/decimal/no_opts-16            460861              2421 ns/op
+Benchmark/verify/path/decimal/no_opts-16          669487              1820 ns/op
+Benchmark/sign/path/decimal/prefix-16             351980              2937 ns/op
+Benchmark/verify/path/decimal/prefix-16           566366              1892 ns/op
+Benchmark/sign/path/decimal/skip_query-16         572380              2411 ns/op
+Benchmark/verify/path/decimal/skip_query-16       587379              1869 ns/op
+Benchmark/sign/path/decimal/prefix_and_skip_query-16              353696              3019 ns/op
+Benchmark/verify/path/decimal/prefix_and_skip_query-16            601311              1891 ns/op
+Benchmark/sign/path/base58/no_opts-16                             555777              2418 ns/op
+Benchmark/verify/path/base58/no_opts-16                           629716              1792 ns/op
+Benchmark/sign/path/base58/prefix-16                              431458              2776 ns/op
+Benchmark/verify/path/base58/prefix-16                            714262              1848 ns/op
+Benchmark/sign/path/base58/skip_query-16                          448022              2380 ns/op
+Benchmark/verify/path/base58/skip_query-16                        618013              1837 ns/op
+Benchmark/sign/path/base58/prefix_and_skip_query-16               396823              2759 ns/op
+Benchmark/verify/path/base58/prefix_and_skip_query-16             547171              1840 ns/op
+Benchmark/sign/query/decimal/no_opts-16                           195300              6263 ns/op
+Benchmark/verify/query/decimal/no_opts-16                         229317              5367 ns/op
+Benchmark/sign/query/decimal/prefix-16                            184351              6387 ns/op
+Benchmark/verify/query/decimal/prefix-16                          231315              5657 ns/op
+Benchmark/sign/query/decimal/skip_query-16                        144122              7567 ns/op
+Benchmark/verify/query/decimal/skip_query-16                      166753              6878 ns/op
+Benchmark/sign/query/decimal/prefix_and_skip_query-16             157466              7757 ns/op
+Benchmark/verify/query/decimal/prefix_and_skip_query-16           157782              6751 ns/op
+Benchmark/sign/query/base58/no_opts-16                            181545              6106 ns/op
+Benchmark/verify/query/base58/no_opts-16                          249518              5178 ns/op
+Benchmark/sign/query/base58/prefix-16                             192388              6307 ns/op
+Benchmark/verify/query/base58/prefix-16                           222874              5344 ns/op
+Benchmark/sign/query/base58/skip_query-16                         177720              7256 ns/op
+Benchmark/verify/query/base58/skip_query-16                       190534              6436 ns/op
+Benchmark/sign/query/base58/prefix_and_skip_query-16              147140              7465 ns/op
+Benchmark/verify/query/base58/prefix_and_skip_query-16            175618              6741 ns/op
 PASS
-ok      github.com/leg100/surl  19.906s
+ok      github.com/leg100/surl  39.958s
 ```
 
