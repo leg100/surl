@@ -45,7 +45,7 @@ func main() {
 
 The format and behaviour of signed URLs can be configured by passing options to the constructor.
 
-### Query Formatter
+#### Query Formatter
 
 ```go
 surl.New(secret, surl.WithQueryFormatter())
@@ -56,7 +56,7 @@ The query formatter is the default format. It stores the signature and expiry in
 https://example.com/a/b/c?expiry=1667331055&foo=bar&signature=TGvxmRwpoAUt9YEIbeJ164lMYrzA2DBnYB9Lcy9m1T
 ```
 
-### Path Formatter
+#### Path Formatter
 
 ```go
 surl.New(secret, surl.WithPathFormatter())
@@ -68,7 +68,7 @@ The path formatter stores the signature and expiry in the path itself:
 https://example.com/PaMIbZQ6wxPdHXVLfIGwZBULo-FSTdt7-bCLZjBPPUE.1669574162/a/b/c?foo=bar
 ```
 
-### Prefix Path
+#### Prefix Path
 
 ```go
 surl.New(secret, surl.PrefixPath("/signed"))
@@ -82,7 +82,7 @@ https://example.com/signed/a/b/c?expiry=1669574398&foo=bar&signature=NvIrIFcc1Oa
 
 Note: a slash is implicitly inserted between the prefix and the rest of the path.
 
-### Skip Query
+#### Skip Query
 
 ```go
 surl.New(secret, surl.SkipQuery())
@@ -90,7 +90,7 @@ surl.New(secret, surl.SkipQuery())
 
 Skip the query string when computing the signature. This is useful, say, if you have pagination query parameters but you want to use the same signed URL regardless of their value. See the [example](./example/skip_query/main.go).
 
-### Decimal Encoding of Expiry
+#### Decimal Encoding of Expiry
 
 ```go
 surl.New(secret, surl.WithDecimalExpiry())
@@ -102,7 +102,7 @@ Encode expiry in decimal. This is the default.
 https://example.com/a/b/c?expiry=1667331055&foo=bar&signature=TGvxmRwpoAUt9YEIbeJ164lMYrzA2DBnYB9Lcy9m1T
 ```
 
-### Base58 Encoding of Expiry
+#### Base58 Encoding of Expiry
 
 ```go
 surl.New(secret, surl.WithBase58Expiry())
