@@ -40,11 +40,11 @@ func TestQueryFormatter_Errors(t *testing.T) {
 
 	t.Run("missing query params", func(t *testing.T) {
 		err := signer.Verify("https://example.com/a/b/c?foo=bar")
-		assert.Truef(t, errors.Is(err, ErrInvalidSignedURL), "got error: %w", err)
+		assert.Truef(t, errors.Is(err, ErrInvalidFormat), "got error: %w", err)
 	})
 
 	t.Run("missing signature param", func(t *testing.T) {
 		err := signer.Verify("https://example.com/a/b/c?foo=bar&expiry=123")
-		assert.True(t, errors.Is(err, ErrInvalidSignedURL), "got error: %w", err)
+		assert.True(t, errors.Is(err, ErrInvalidFormat), "got error: %w", err)
 	})
 }

@@ -26,7 +26,7 @@ func (f *pathFormatter) extractSignature(u *url.URL) (string, error) {
 	// prise apart sig and payload
 	sig, payload, found := strings.Cut(u.Path, ".")
 	if !found {
-		return "", ErrInvalidSignedURL
+		return "", ErrInvalidFormat
 	}
 	// remove leading /
 	sig = sig[1:]
@@ -40,7 +40,7 @@ func (*pathFormatter) extractExpiry(u *url.URL) (string, error) {
 	// prise apart expiry and data
 	expiry, path, found := strings.Cut(u.Path, "/")
 	if !found {
-		return "", ErrInvalidSignedURL
+		return "", ErrInvalidFormat
 	}
 	// add leading slash back to path
 	u.Path = "/" + path

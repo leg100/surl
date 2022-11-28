@@ -32,7 +32,7 @@ func (f *queryFormatter) extractSignature(u *url.URL) (string, error) {
 	q := u.Query()
 	sig := q.Get("signature")
 	if sig == "" {
-		return "", fmt.Errorf("%w: %s", ErrInvalidSignedURL, u.String())
+		return "", fmt.Errorf("%w: %s", ErrInvalidFormat, u.String())
 	}
 	q.Del("signature")
 	u.RawQuery = q.Encode()
@@ -44,7 +44,7 @@ func (f *queryFormatter) extractExpiry(u *url.URL) (string, error) {
 	q := u.Query()
 	expiry := q.Get("expiry")
 	if expiry == "" {
-		return "", ErrInvalidSignedURL
+		return "", ErrInvalidFormat
 	}
 	q.Del("expiry")
 	u.RawQuery = q.Encode()

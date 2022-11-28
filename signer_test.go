@@ -150,7 +150,7 @@ func TestSigner_Prefix(t *testing.T) {
 
 	t.Run("invalid prefix", func(t *testing.T) {
 		err := signer.Verify("http://abc.com/wrongprefix/foo/bar?expiry=123&signature=fJLFKJ3903")
-		assert.Equal(t, ErrInvalidSignedURL, err)
+		assert.Equal(t, ErrInvalidFormat, err)
 	})
 }
 

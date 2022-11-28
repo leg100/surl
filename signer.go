@@ -16,14 +16,12 @@ import (
 )
 
 var (
-	// ErrInvalidSignature is returned when the provided secret's
-	// signature is not valid.
+	// ErrInvalidSignature is returned when the signature is invalid.
 	ErrInvalidSignature = errors.New("invalid signature")
-	// ErrInvalidSignedURL is returned when the signed URL's format is
+	// ErrInvalidFormat is returned when the format of the signed URL is
 	// invalid.
-	ErrInvalidSignedURL = errors.New("invalid signed URL")
-	// ErrExpired is returned when the signed URL's expiry has been
-	// exceeded.
+	ErrInvalidFormat = errors.New("invalid format")
+	// ErrExpired is returned when a signed URL has expired.
 	ErrExpired = errors.New("URL has expired")
 
 	// Default formatter is the query formatter.
@@ -158,7 +156,7 @@ func (s *Signer) Verify(signed string) error {
 	}
 
 	if !strings.HasPrefix(u.Path, s.prefix) {
-		return ErrInvalidSignedURL
+		return ErrInvalidFormat
 	}
 	u.Path = u.Path[len(s.prefix):]
 
