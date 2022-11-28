@@ -117,3 +117,32 @@ https://example.com/a/b/c?expiry=3xx1vi&foo=bar&signature=-mwCtMLTBgDkShZTbBcHjR
 ## Notes
 
 * Any change in the order of the query parameters in a signed URL renders it invalid, unless `SkipQuery` is specified.
+
+## Benchmarks
+
+```bash
+> go test -run=XXX -bench=.
+goos: linux
+goarch: amd64
+pkg: github.com/leg100/surl
+cpu: AMD Ryzen 7 3800X 8-Core Processor
+BenchmarkSigner/by_path/decimal/no_opts-16                514827              2451 ns/op
+BenchmarkSigner/by_path/decimal/with_prefix-16            362757              3174 ns/op
+BenchmarkSigner/by_path/decimal/skip_query-16             470324              2399 ns/op
+BenchmarkSigner/by_path/decimal/skip_query_and_with_prefix-16             365589              3052 ns/op
+BenchmarkSigner/by_path/base58/no_opts-16                                 481573              2339 ns/op
+BenchmarkSigner/by_path/base58/with_prefix-16                             466501              2809 ns/op
+BenchmarkSigner/by_path/base58/skip_query-16                              546319              2304 ns/op
+BenchmarkSigner/by_path/base58/skip_query_and_with_prefix-16              453450              2799 ns/op
+BenchmarkSigner/by_query/decimal/no_opts-16                               197506              6483 ns/op
+BenchmarkSigner/by_query/decimal/with_prefix-16                           165560              6662 ns/op
+BenchmarkSigner/by_query/decimal/skip_query-16                            157486              7489 ns/op
+BenchmarkSigner/by_query/decimal/skip_query_and_with_prefix-16            150454              7837 ns/op
+BenchmarkSigner/by_query/base58/no_opts-16                                206263              6256 ns/op
+BenchmarkSigner/by_query/base58/with_prefix-16                            161008              6787 ns/op
+BenchmarkSigner/by_query/base58/skip_query-16                             159558              7374 ns/op
+BenchmarkSigner/by_query/base58/skip_query_and_with_prefix-16             151778              7578 ns/op
+PASS
+ok      github.com/leg100/surl  19.906s
+```
+

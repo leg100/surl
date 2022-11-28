@@ -1,6 +1,7 @@
 package surl
 
 import (
+	"crypto/rand"
 	"net/url"
 	"path"
 	"testing"
@@ -10,8 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSigner(t *testing.T) {
-	formatters := []struct {
+var (
+	formatters = []struct {
 		name      string
 		formatter Option
 	}{
@@ -25,7 +26,7 @@ func TestSigner(t *testing.T) {
 		},
 	}
 
-	encoders := []struct {
+	encoders = []struct {
 		name    string
 		encoder Option
 	}{
@@ -39,7 +40,7 @@ func TestSigner(t *testing.T) {
 		},
 	}
 
-	opts := []struct {
+	opts = []struct {
 		name    string
 		options []Option
 	}{
@@ -59,7 +60,9 @@ func TestSigner(t *testing.T) {
 			options: []Option{SkipQuery(), PrefixPath("/signed")},
 		},
 	}
+)
 
+func TestSigner(t *testing.T) {
 	inputs := []struct {
 		name     string
 		unsigned string
@@ -90,7 +93,7 @@ func TestSigner(t *testing.T) {
 					options := append(opt.options, f.formatter, enc.encoder)
 					signer := New([]byte("abc123"), options...)
 
-					t.Run(path.Join(tt.name, f.name, opt.name), func(t *testing.T) {
+					t.Run(path.Join(tt.name, f.name, enc.name, opt.name), func(t *testing.T) {
 						signed, err := signer.Sign(tt.unsigned, time.Second*10)
 						require.NoError(t, err)
 
@@ -209,4 +212,34 @@ func TestSigner_Errors(t *testing.T) {
 		err = signer.Verify(hacked.String())
 		assert.Error(t, err)
 	})
+}
+
+var bu string
+
+func BenchmarkSigner(b *testing.B) {
+	secret := make([]byte, 64)
+	_, err := rand.Read(secret)
+	require.NoError(b, err)
+
+	// invoke bench for each combination of formatter, encoder, and set of
+	// options
+	for _, f := range formatters {
+		for _, enc := range encoders {
+			for _, opt := range opts {
+				options := append(opt.options, f.formatter, enc.encoder)
+
+				b.Run(path.Join(f.name, enc.name, opt.name), func(b *testing.B) {
+					signer := New(secret, options...)
+
+					var u string
+					for n := 0; n < b.N; n++ {
+						// store result to prevent compiler eliminating func call
+						u, _ = signer.Sign("https://example.com/a/b/c?x=1&y=2&z=3", time.Hour)
+					}
+					// store result in pkg var to to prevent compiler eliminating benchmark
+					bu = u
+				})
+			}
+		}
+	}
 }
