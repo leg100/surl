@@ -32,12 +32,12 @@ var (
 
 // Signer is capable of signing and verifying signed URLs with an expiry.
 type Signer struct {
-	mu          sync.Mutex
-	hash        hash.Hash
-	dirty       bool
-	prefix      string
-	payloadOpts payloadOptions
+	mu     sync.Mutex
+	hash   hash.Hash
+	dirty  bool
+	prefix string
 
+	payloadOptions
 	formatter
 	intEncoding
 }
@@ -74,7 +74,7 @@ type Option func(*Signer)
 // you want to use the same signed URL regardless of their value.
 func SkipQuery() Option {
 	return func(s *Signer) {
-		s.payloadOpts.skipQuery = true
+		s.skipQuery = true
 	}
 }
 
@@ -130,7 +130,7 @@ func (s *Signer) Sign(unsigned string, lifespan time.Duration) (string, error) {
 	s.addExpiry(u, encodedExpiry)
 
 	// Build payload for signature computation
-	payload := s.buildPayload(*u, s.payloadOpts)
+	payload := s.buildPayload(*u, s.payloadOptions)
 
 	// Sign payload creating a signature
 	sig := s.sign([]byte(payload))
@@ -170,7 +170,7 @@ func (s *Signer) Verify(signed string) error {
 	}
 
 	// build the payload for signature computation
-	payload := s.buildPayload(*u, s.payloadOpts)
+	payload := s.buildPayload(*u, s.payloadOptions)
 
 	// create another signature for comparison and compare
 	compare := s.sign([]byte(payload))

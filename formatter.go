@@ -19,6 +19,7 @@ type formatter interface {
 	extractExpiry(*url.URL) (string, error)
 }
 
+// payloadOptions are options that alter the payload to be signed.
 type payloadOptions struct {
 	skipQuery bool
 }
