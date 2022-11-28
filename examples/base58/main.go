@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	signer := surl.New([]byte("secret_sesame"), surl.WithBase58Expiry())
+	signer := surl.New([]byte("secret_key"), surl.WithBase58Expiry())
 
 	// Create a signed URL that expires in one hour.
 	signed, _ := signer.Sign("https://example.com/a/b/c?foo=bar", time.Hour)
