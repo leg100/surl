@@ -88,7 +88,7 @@ Note: a slash is implicitly inserted between the prefix and the rest of the path
 surl.New(secret, surl.SkipQuery())
 ```
 
-Skip the query string when computing the signature. This is useful, say, if you have pagination query parameters but you want to use the same signed URL regardless of their value. See the [example](./example/skip_query/main.go).
+Skip the query string when computing the signature. This is useful, say, if you have pagination query parameters but you want to use the same signed URL regardless of their value. See the [example](./examples/skip_query/main.go).
 
 #### Decimal Encoding of Expiry
 
