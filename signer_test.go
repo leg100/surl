@@ -56,8 +56,20 @@ var (
 			options: []Option{SkipQuery()},
 		},
 		{
+			name:    "skip scheme",
+			options: []Option{SkipScheme()},
+		},
+		{
 			name:    "prefix and skip query",
 			options: []Option{SkipQuery(), PrefixPath("/signed")},
+		},
+		{
+			name:    "prefix and skip scheme",
+			options: []Option{SkipScheme(), PrefixPath("/signed")},
+		},
+		{
+			name:    "prefix and skip query and skip scheme",
+			options: []Option{SkipQuery(), SkipScheme(), PrefixPath("/signed")},
 		},
 	}
 )
