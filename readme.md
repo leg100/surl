@@ -96,7 +96,7 @@ Skip the query string when computing the signature. This is useful, say, if you 
 surl.New(secret, surl.SkipScheme())
 ```
 
-Skip the scheme when computing the signature. This is useful, say, if you generate signed URLs in production where you use https but you want to use these URLs in dev. See the [example](./examples/skip_scheme/main.go).
+Skip the scheme when computing the signature. This is useful, say, if you generate signed URLs in production where you use https but you want to use these URLs in dev where you use http. See the [example](./examples/skip_scheme/main.go).
 
 #### Decimal Encoding of Expiry
 
