@@ -148,6 +148,41 @@ func TestSigner_SkipQuery(t *testing.T) {
 	})
 }
 
+func TestSigner_SkipScheme(t *testing.T) {
+	// Demonstrate the SkipScheme option by changing the scheme on the signed
+	// URL and showing it still verifies.
+	t.Run("skip scheme", func(t *testing.T) {
+		signer := New([]byte("abc123"), SkipScheme())
+
+		unsigned := "https://example.com/a/b/c?foo=bar"
+		signed, err := signer.Sign(unsigned, time.Minute)
+		require.NoError(t, err)
+
+		u, err := url.Parse(signed)
+		require.NoError(t, err)
+		u.Scheme = "http"
+
+		err = signer.Verify(u.String())
+		require.NoError(t, err)
+	})
+
+	// Demonstrate how changing the scheme invalidates the signed URL
+	t.Run("do not skip scheme", func(t *testing.T) {
+		signer := New([]byte("abc123"))
+
+		unsigned := "https://example.com/a/b/c?foo=bar"
+		signed, err := signer.Sign(unsigned, time.Minute)
+		require.NoError(t, err)
+
+		u, err := url.Parse(signed)
+		require.NoError(t, err)
+		u.Scheme = "http"
+
+		err = signer.Verify(u.String())
+		assert.Equal(t, ErrInvalidSignature, err)
+	})
+}
+
 func TestSigner_Prefix(t *testing.T) {
 	signer := New([]byte("abc123"), PrefixPath("/signed"))
 

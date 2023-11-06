@@ -15,6 +15,9 @@ func (f *pathFormatter) buildPayload(u url.URL, opts payloadOptions) string {
 	if opts.skipQuery {
 		u.RawQuery = ""
 	}
+	if opts.skipScheme {
+		u.Scheme = ""
+	}
 	return u.String()
 }
 

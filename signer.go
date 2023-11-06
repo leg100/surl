@@ -78,6 +78,15 @@ func SkipQuery() Option {
 	}
 }
 
+// SkipScheme instructs Signer to skip the scheme when computing the signature.
+// This is useful, say, if you generate signed URLs in production where you use
+// https but you want to use these URLs in development too where you use http.
+func SkipScheme() Option {
+	return func(s *Signer) {
+		s.skipScheme = true
+	}
+}
+
 // PrefixPath prefixes the signed URL's path with a string. This can make it easier for a server
 // to differentiate between signed and non-signed URLs. Note: the prefix is not
 // part of the signature computation.
