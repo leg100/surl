@@ -1,5 +1,5 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/leg100/surl)](https://goreportcard.com/report/github.com/leg100/surl)
-[![Version](https://img.shields.io/badge/goversion-1.19.x-blue.svg)](https://golang.org)
+[![Version](https://img.shields.io/badge/goversion-1.21.x-blue.svg)](https://golang.org)
 [![Go Reference](https://pkg.go.dev/badge/github.com/leg100/surl.svg)](https://pkg.go.dev/github.com/leg100/surl)
 [![License](http://img.shields.io/badge/license-mit-blue.svg?style=flat-square)](https://raw.githubusercontent.com/leg100/goblender/master/LICENSE)
 ![Tests](https://github.com/leg100/signer/actions/workflows/tests.yml/badge.svg)
