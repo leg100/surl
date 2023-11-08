@@ -19,6 +19,9 @@ func (f *queryFormatter) buildPayload(u url.URL, opts payloadOptions) string {
 		expiry := u.Query().Get("expiry")
 		u.RawQuery = url.Values{"expiry": []string{expiry}}.Encode()
 	}
+	if opts.skipScheme {
+		u.Scheme = ""
+	}
 	return u.String()
 }
 

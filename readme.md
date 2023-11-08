@@ -90,6 +90,14 @@ surl.New(secret, surl.SkipQuery())
 
 Skip the query string when computing the signature. This is useful, say, if you have pagination query parameters but you want to use the same signed URL regardless of their value. See the [example](./examples/skip_query/main.go).
 
+#### Skip Scheme
+
+```go
+surl.New(secret, surl.SkipScheme())
+```
+
+Skip the scheme when computing the signature. This is useful, say, if you generate signed URLs in production where you use https but you want to use these URLs in development too where you use http. See the [example](./examples/skip_scheme/main.go).
+
 #### Decimal Encoding of Expiry
 
 ```go
