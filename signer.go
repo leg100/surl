@@ -24,9 +24,11 @@ var (
 	// ErrExpired is returned when a signed URL has expired.
 	ErrExpired = errors.New("URL has expired")
 
-	// Default formatter is the query formatter.
+	// DefaultFormatter sets the default format for the query parameter to the
+	// query formatter.
 	DefaultFormatter = WithQueryFormatter()
-	// Default expiry encoding is base10 (decimal)
+	// DefaultExpiryFormatter sets the default format for the expiry paramter to
+	// base10 (decimal)
 	DefaultExpiryFormatter = WithDecimalExpiry()
 )
 

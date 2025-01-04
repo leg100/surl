@@ -28,7 +28,7 @@ func main() {
 	signer := surl.New([]byte("secret_key"))
 
 	// Create a signed URL that expires in one hour.
-	signed, _ := signer.Sign("https://example.com/a/b/c?foo=bar", time.Hour)
+	signed, _ := signer.Sign("https://example.com/a/b/c?foo=bar", time.Now().Add(time.Hour))
 	fmt.Println(signed)
 	// Outputs something like:
 	// https://example.com/a/b/c?expiry=1667331055&foo=bar&signature=TGvxmRwpoAUt9YEIbeJ164lMYrzA2DBnYB9Lcy9m1T
@@ -133,40 +133,64 @@ https://example.com/a/b/c?expiry=3xx1vi&foo=bar&signature=-mwCtMLTBgDkShZTbBcHjR
 goos: linux
 goarch: amd64
 pkg: github.com/leg100/surl
-cpu: AMD Ryzen 7 3800X 8-Core Processor
-Benchmark/sign/path/decimal/no_opts-16            460861              2421 ns/op
-Benchmark/verify/path/decimal/no_opts-16          669487              1820 ns/op
-Benchmark/sign/path/decimal/prefix-16             351980              2937 ns/op
-Benchmark/verify/path/decimal/prefix-16           566366              1892 ns/op
-Benchmark/sign/path/decimal/skip_query-16         572380              2411 ns/op
-Benchmark/verify/path/decimal/skip_query-16       587379              1869 ns/op
-Benchmark/sign/path/decimal/prefix_and_skip_query-16              353696              3019 ns/op
-Benchmark/verify/path/decimal/prefix_and_skip_query-16            601311              1891 ns/op
-Benchmark/sign/path/base58/no_opts-16                             555777              2418 ns/op
-Benchmark/verify/path/base58/no_opts-16                           629716              1792 ns/op
-Benchmark/sign/path/base58/prefix-16                              431458              2776 ns/op
-Benchmark/verify/path/base58/prefix-16                            714262              1848 ns/op
-Benchmark/sign/path/base58/skip_query-16                          448022              2380 ns/op
-Benchmark/verify/path/base58/skip_query-16                        618013              1837 ns/op
-Benchmark/sign/path/base58/prefix_and_skip_query-16               396823              2759 ns/op
-Benchmark/verify/path/base58/prefix_and_skip_query-16             547171              1840 ns/op
-Benchmark/sign/query/decimal/no_opts-16                           195300              6263 ns/op
-Benchmark/verify/query/decimal/no_opts-16                         229317              5367 ns/op
-Benchmark/sign/query/decimal/prefix-16                            184351              6387 ns/op
-Benchmark/verify/query/decimal/prefix-16                          231315              5657 ns/op
-Benchmark/sign/query/decimal/skip_query-16                        144122              7567 ns/op
-Benchmark/verify/query/decimal/skip_query-16                      166753              6878 ns/op
-Benchmark/sign/query/decimal/prefix_and_skip_query-16             157466              7757 ns/op
-Benchmark/verify/query/decimal/prefix_and_skip_query-16           157782              6751 ns/op
-Benchmark/sign/query/base58/no_opts-16                            181545              6106 ns/op
-Benchmark/verify/query/base58/no_opts-16                          249518              5178 ns/op
-Benchmark/sign/query/base58/prefix-16                             192388              6307 ns/op
-Benchmark/verify/query/base58/prefix-16                           222874              5344 ns/op
-Benchmark/sign/query/base58/skip_query-16                         177720              7256 ns/op
-Benchmark/verify/query/base58/skip_query-16                       190534              6436 ns/op
-Benchmark/sign/query/base58/prefix_and_skip_query-16              147140              7465 ns/op
-Benchmark/verify/query/base58/prefix_and_skip_query-16            175618              6741 ns/op
+cpu: AMD Ryzen 7 3800X 8-Core Processor             
+Benchmark/sign/path/decimal/no_opts-16            790069              1366 ns/op
+Benchmark/verify/path/decimal/no_opts-16          865004              1267 ns/op
+Benchmark/sign/path/decimal/prefix-16             671443              1659 ns/op
+Benchmark/verify/path/decimal/prefix-16           836241              1303 ns/op
+Benchmark/sign/path/decimal/skip_query-16         813769              1354 ns/op
+Benchmark/verify/path/decimal/skip_query-16       869764              1262 ns/op
+Benchmark/sign/path/decimal/skip_scheme-16        799594              1351 ns/op
+Benchmark/verify/path/decimal/skip_scheme-16      865023              1262 ns/op
+Benchmark/sign/path/decimal/prefix_and_skip_query-16              681868              1641 ns/op
+Benchmark/verify/path/decimal/prefix_and_skip_query-16            835401              1288 ns/op
+Benchmark/sign/path/decimal/prefix_and_skip_scheme-16             671688              1654 ns/op
+Benchmark/verify/path/decimal/prefix_and_skip_scheme-16           837308              1285 ns/op
+Benchmark/sign/path/decimal/prefix_and_skip_query_and_skip_scheme-16              677064              1645 ns/op
+Benchmark/verify/path/decimal/prefix_and_skip_query_and_skip_scheme-16            859400              1283 ns/op
+Benchmark/sign/path/base58/no_opts-16                                             832389              1332 ns/op
+Benchmark/verify/path/base58/no_opts-16                                           894231              1238 ns/op
+Benchmark/sign/path/base58/prefix-16                                              678120              1627 ns/op
+Benchmark/verify/path/base58/prefix-16                                            832461              1280 ns/op
+Benchmark/sign/path/base58/skip_query-16                                          829882              1307 ns/op
+Benchmark/verify/path/base58/skip_query-16                                        903090              1218 ns/op
+Benchmark/sign/path/base58/skip_scheme-16                                         785352              1322 ns/op
+Benchmark/verify/path/base58/skip_scheme-16                                       886584              1233 ns/op
+Benchmark/sign/path/base58/prefix_and_skip_query-16                               691098              1586 ns/op
+Benchmark/verify/path/base58/prefix_and_skip_query-16                             866223              1256 ns/op
+Benchmark/sign/path/base58/prefix_and_skip_scheme-16                              679152              1609 ns/op
+Benchmark/verify/path/base58/prefix_and_skip_scheme-16                            872644              1274 ns/op
+Benchmark/sign/path/base58/prefix_and_skip_query_and_skip_scheme-16               675469              1591 ns/op
+Benchmark/verify/path/base58/prefix_and_skip_query_and_skip_scheme-16             871072              1237 ns/op
+Benchmark/sign/query/decimal/no_opts-16                                           347485              3382 ns/op
+Benchmark/verify/query/decimal/no_opts-16                                         367434              3140 ns/op
+Benchmark/sign/query/decimal/prefix-16                                            321260              3646 ns/op
+Benchmark/verify/query/decimal/prefix-16                                          361286              3153 ns/op
+Benchmark/sign/query/decimal/skip_query-16                                        276272              4211 ns/op
+Benchmark/verify/query/decimal/skip_query-16                                      293073              3852 ns/op
+Benchmark/sign/query/decimal/skip_scheme-16                                       352858              3281 ns/op
+Benchmark/verify/query/decimal/skip_scheme-16                                     373916              3035 ns/op
+Benchmark/sign/query/decimal/prefix_and_skip_query-16                             267811              4353 ns/op
+Benchmark/verify/query/decimal/prefix_and_skip_query-16                           301072              3875 ns/op
+Benchmark/sign/query/decimal/prefix_and_skip_scheme-16                            326252              3505 ns/op
+Benchmark/verify/query/decimal/prefix_and_skip_scheme-16                          370263              3059 ns/op
+Benchmark/sign/query/decimal/prefix_and_skip_query_and_skip_scheme-16             267507              4341 ns/op
+Benchmark/verify/query/decimal/prefix_and_skip_query_and_skip_scheme-16           298611              3857 ns/op
+Benchmark/sign/query/base58/no_opts-16                                            347785              3244 ns/op
+Benchmark/verify/query/base58/no_opts-16                                          376110              3032 ns/op
+Benchmark/sign/query/base58/prefix-16                                             324220              3589 ns/op
+Benchmark/verify/query/base58/prefix-16                                           331550              3107 ns/op
+Benchmark/sign/query/base58/skip_query-16                                         291204              4002 ns/op
+Benchmark/verify/query/base58/skip_query-16                                       302330              3834 ns/op
+Benchmark/sign/query/base58/skip_scheme-16                                        328934              3349 ns/op
+Benchmark/verify/query/base58/skip_scheme-16                                      353527              3185 ns/op
+Benchmark/sign/query/base58/prefix_and_skip_query-16                              266244              4366 ns/op
+Benchmark/verify/query/base58/prefix_and_skip_query-16                            300997              3846 ns/op
+Benchmark/sign/query/base58/prefix_and_skip_scheme-16                             328764              3506 ns/op
+Benchmark/verify/query/base58/prefix_and_skip_scheme-16                           378475              3174 ns/op
+Benchmark/sign/query/base58/prefix_and_skip_query_and_skip_scheme-16              268564              4276 ns/op
+Benchmark/verify/query/base58/prefix_and_skip_query_and_skip_scheme-16            295378              3939 ns/op
 PASS
-ok      github.com/leg100/surl  39.958s
+ok      github.com/leg100/surl  64.305s
 ```
 

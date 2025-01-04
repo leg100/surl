@@ -12,7 +12,7 @@ func main() {
 	signer := surl.New([]byte("secret_key"), surl.WithBase58Expiry())
 
 	// Create a signed URL that expires in one hour.
-	signed, _ := signer.Sign("https://example.com/a/b/c?foo=bar", time.Hour)
+	signed, _ := signer.Sign("https://example.com/a/b/c?foo=bar", time.Now().Add(time.Hour))
 	fmt.Println(signed)
 	// Outputs something like:
 	// https://example.com/a/b/c?expiry=3xx1vi&foo=bar&signature=-mwCtMLTBgDkShZTbBcHjRCRXtO_ZYPE0cmrh3u6S-s
