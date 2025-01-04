@@ -6,7 +6,6 @@ toolchain go1.23.3
 
 require (
 	github.com/itchyny/base58-go v0.2.2
-	github.com/leg100/surl v0.0.6
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/crypto v0.31.0
 )

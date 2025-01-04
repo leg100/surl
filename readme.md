@@ -9,7 +9,7 @@ Create signed URLs in Go.
 
 ## Installation
 
-`go get github.com/leg100/surl@latest`
+`go get github.com/leg100/surl/v2@latest`
 
 ## Usage
 
@@ -21,7 +21,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/leg100/surl"
+	"github.com/leg100/surl/v2"
 )
 
 func main() {

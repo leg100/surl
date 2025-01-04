@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/leg100/surl"
+	"github.com/leg100/surl/v2"
 )
 
 func main() {
