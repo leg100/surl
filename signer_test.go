@@ -106,7 +106,7 @@ func TestSigner(t *testing.T) {
 					signer := New([]byte("abc123"), options...)
 
 					t.Run(path.Join(tt.name, f.name, enc.name, opt.name), func(t *testing.T) {
-						signed, err := signer.Sign(tt.unsigned, time.Second*10)
+						signed, err := signer.Sign(tt.unsigned, time.Now().Add(time.Second*10))
 						require.NoError(t, err)
 
 						// check valid URL
@@ -132,7 +132,7 @@ func TestSigner_SkipQuery(t *testing.T) {
 		sign := New([]byte("abc123"), SkipQuery())
 
 		u := "https://example.com/a/b/c?foo=bar"
-		signed, err := sign.Sign(u, time.Minute)
+		signed, err := sign.Sign(u, time.Now().Add(time.Minute))
 		require.NoError(t, err)
 
 		signed = signed + "&page_num=3&page_size=20"
@@ -150,7 +150,7 @@ func TestSigner_SkipQuery(t *testing.T) {
 	// Demonstrate how changing the query string invalidates the signed URL
 	t.Run("do not skip query", func(t *testing.T) {
 		u := "https://example.com/a/b/c?foo=bar"
-		signed, err := signer.Sign(u, time.Minute)
+		signed, err := signer.Sign(u, time.Now().Add(time.Minute))
 		require.NoError(t, err)
 
 		signed = signed + "&page_num=3&page_size=20"
@@ -167,7 +167,7 @@ func TestSigner_SkipScheme(t *testing.T) {
 		signer := New([]byte("abc123"), SkipScheme())
 
 		unsigned := "https://example.com/a/b/c?foo=bar"
-		signed, err := signer.Sign(unsigned, time.Minute)
+		signed, err := signer.Sign(unsigned, time.Now().Add(time.Minute))
 		require.NoError(t, err)
 
 		u, err := url.Parse(signed)
@@ -183,7 +183,7 @@ func TestSigner_SkipScheme(t *testing.T) {
 		signer := New([]byte("abc123"))
 
 		unsigned := "https://example.com/a/b/c?foo=bar"
-		signed, err := signer.Sign(unsigned, time.Minute)
+		signed, err := signer.Sign(unsigned, time.Now().Add(time.Minute))
 		require.NoError(t, err)
 
 		u, err := url.Parse(signed)
@@ -209,7 +209,7 @@ func TestSigner_Errors(t *testing.T) {
 		signer := New([]byte("abc123"))
 
 		u := "https://example.com/a/b/c?baz=cow&foo=bar"
-		signed, err := signer.Sign(u, time.Duration(0))
+		signed, err := signer.Sign(u, time.Now())
 		require.NoError(t, err)
 
 		err = signer.Verify(signed)
@@ -218,25 +218,25 @@ func TestSigner_Errors(t *testing.T) {
 
 	t.Run("relative path", func(t *testing.T) {
 		signer := New([]byte("abc123"))
-		_, err := signer.Sign("foo/bar", time.Minute)
+		_, err := signer.Sign("foo/bar", time.Now().Add(time.Minute))
 		assert.Error(t, err)
 	})
 
 	t.Run("empty url", func(t *testing.T) {
 		signer := New([]byte("abc123"))
-		_, err := signer.Sign("", 10*time.Second)
+		_, err := signer.Sign("", time.Now().Add(10*time.Second))
 		assert.Error(t, err)
 	})
 
 	t.Run("not a url", func(t *testing.T) {
 		signer := New([]byte("abc123"))
-		_, err := signer.Sign("cod", 10*time.Second)
+		_, err := signer.Sign("cod", time.Now().Add(10*time.Second))
 		assert.Error(t, err)
 	})
 
 	t.Run("scheme has changed", func(t *testing.T) {
 		signer := New([]byte("abc123"))
-		signed, err := signer.Sign("https://example.com/a/b/c?baz=cow&foo=bar", 10*time.Second)
+		signed, err := signer.Sign("https://example.com/a/b/c?baz=cow&foo=bar", time.Now().Add(10*time.Second))
 		require.NoError(t, err)
 
 		hacked, err := url.Parse(signed)
@@ -249,7 +249,7 @@ func TestSigner_Errors(t *testing.T) {
 
 	t.Run("hostname has changed", func(t *testing.T) {
 		signer := New([]byte("abc123"))
-		signed, err := signer.Sign("https://example.com/a/b/c?baz=cow&foo=bar", 10*time.Second)
+		signed, err := signer.Sign("https://example.com/a/b/c?baz=cow&foo=bar", time.Now().Add(10*time.Second))
 		require.NoError(t, err)
 
 		hacked, err := url.Parse(signed)
@@ -284,7 +284,7 @@ func Benchmark(b *testing.B) {
 					var u string
 					for n := 0; n < b.N; n++ {
 						// store result to prevent compiler eliminating func call
-						u, _ = signer.Sign("https://example.com/a/b/c?x=1&y=2&z=3", time.Hour)
+						u, _ = signer.Sign("https://example.com/a/b/c?x=1&y=2&z=3", time.Now().Add(time.Hour))
 					}
 					// store result in pkg var to to prevent compiler eliminating benchmark
 					bu = u
@@ -292,7 +292,7 @@ func Benchmark(b *testing.B) {
 
 				b.Run(path.Join("verify", f.name, enc.name, opt.name), func(b *testing.B) {
 					signer := New(secret, options...)
-					signed, _ := signer.Sign("https://example.com/a/b/c?x=1&y=2&z=3", time.Hour)
+					signed, _ := signer.Sign("https://example.com/a/b/c?x=1&y=2&z=3", time.Now().Add(time.Hour))
 
 					for n := 0; n < b.N; n++ {
 						// store result to prevent compiler eliminating func call

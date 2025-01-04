@@ -127,14 +127,13 @@ func WithBase58Expiry() Option {
 }
 
 // Sign generates a signed URL with the given lifespan.
-func (s *Signer) Sign(unsigned string, lifespan time.Duration) (string, error) {
+func (s *Signer) Sign(unsigned string, expiry time.Time) (string, error) {
 	u, err := url.ParseRequestURI(unsigned)
 	if err != nil {
 		return "", err
 	}
 
 	// Add expiry to unsigned URL
-	expiry := time.Now().Add(lifespan)
 	encodedExpiry := s.Encode(expiry.Unix())
 	s.addExpiry(u, encodedExpiry)
 
